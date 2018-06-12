@@ -4,6 +4,9 @@ Dragon Creator
 Coded in Scala using ScalaFX and SBT.
 
 Resources:
+- Git
+    - https://git-scm.com/
+    - https://guides.github.com/introduction/git-handbook/
 - IntelliJ
     - https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html
     - https://www.youtube.com/watch?v=pt3uB0sd5kY
