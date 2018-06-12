@@ -10,7 +10,6 @@ import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene}
 
-/** Main class for the "Hello World" style example. */
 object App extends JFXApp {
 
     private val dragModeActiveProperty = new BooleanProperty(this, "dragModeActive", true)
