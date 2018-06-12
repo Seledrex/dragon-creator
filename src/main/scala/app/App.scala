@@ -10,45 +10,43 @@ import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene}
 
+/**
+  * Dragon Creator ScalaFX application.
+  *
+  * @author Eric Auster
+  */
 object App extends JFXApp {
 
     private val dragModeActiveProperty = new BooleanProperty(this, "dragModeActive", true)
-    private val borderStyle = "" +
-        "-fx-background-color: white;" +
-        "-fx-border-color: black;" +
-        "-fx-border-width: 2;" +
-        "-fx-border-radius: 6;" +
-        "-fx-background-radius: 6;" +
-        "-fx-padding: 6;"
 
     stage = new JFXApp.PrimaryStage() {
 
-        title = "Dragon Creator Test Interface"
+        title = Properties.title
         resizable = false
 
         val panelsPane: Pane = new Pane() {
             val optionPanel: Node = makeDraggable(createOptionsPanel())
             val imagePanel: Node = makeDraggable(createImagePanel())
 
-            optionPanel.relocate(5, 5)
+            optionPanel.relocate(Properties.padding, Properties.padding)
             imagePanel.relocate(130, 70)
 
-            children = Seq(optionPanel, imagePanel)
+            children = Seq(imagePanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
 
         val dragModeCheckbox: CheckBox = new CheckBox("Drag mode") {
-            margin = Insets(6)
+            margin = Insets(Properties.padding)
             selected = dragModeActiveProperty()
         }
 
         dragModeActiveProperty <== dragModeCheckbox.selected
 
-        scene = new Scene(1280, 720) {
+        scene = new Scene(Properties.resolution._1, Properties.resolution._2) {
             root = new BorderPane() {
                 center = panelsPane
                 bottom = dragModeCheckbox
-                style = "-fx-background-color: #99baef;"
+                style = Styles.backgroundStyle
             }
         }
     }
@@ -79,7 +77,7 @@ object App extends JFXApp {
     }
 
     private def createOptionsPanel(): Node = {
-        new VBox(4) {
+        new VBox(Properties.padding) {
             children = Seq(
                 new ComboBox(Seq("Option 1", "Option 2", "Option 3")),
                 new ComboBox(Seq("Option 1", "Option 2", "Option 3")),
@@ -90,19 +88,19 @@ object App extends JFXApp {
                 new ComboBox(Seq("Option 1", "Option 2", "Option 3")),
                 new ComboBox(Seq("Option 1", "Option 2", "Option 3"))
             )
-            style = borderStyle
+            style = Styles.panelStyle
         }
     }
 
     private def createImagePanel(): Node = {
-        new HBox(4) {
+        new HBox(Properties.padding) {
             children = Seq(
-                new ImageView(image = new Image("draggily.png")) {
-                    fitHeight = 576
-                    fitWidth = 1024
+                new ImageView(image = new Image(Resources.base)) {
+                    fitWidth = Properties.imageResolution._1
+                    fitHeight = Properties.imageResolution._2
                 }
             )
-            style = borderStyle
+            style = Styles.panelStyle
         }
     }
 
