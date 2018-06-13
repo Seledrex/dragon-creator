@@ -17,21 +17,40 @@ import scalafx.scene.{Group, Node, Scene}
   */
 object App extends JFXApp {
 
-    /**
-      * Property that toggles drag mode on and off.
-      */
-    private val dragModeActiveProperty = new BooleanProperty(this, "dragModeActive", false)
-    private val topImageProperty = new StringProperty(this, "topImage", "top_square")
-    private val bottomImageProperty = new StringProperty(this, "bottomImage", "bottom_square")
+    // Properties
+    private val dragModeProperty = new BooleanProperty(this, Properties.dragModePropertyName, false)
+    private val topImageProperty = new StringProperty(this, Properties.topImagePropertyName, Resources.topSquare.name)
+    private val bottomImageProperty = new StringProperty(this, Properties.bottomImagePropertyName, Resources.bottomSquare.name)
 
-    val topSquare: ImageElement = new ImageElement("top_square", Resources.topSquareFill, Resources.topSquareBorder)
-    val topCircle: ImageElement = new ImageElement("top_circle", Resources.topCircleFill, Resources.topCircleBorder)
-    val base: ImageElement = new ImageElement("base", Resources.baseFill, Resources.baseBorder)
-    val bottomSquare: ImageElement = new ImageElement("bottom_square", Resources.bottomSquareFill, Resources.bottomSquareBorder)
-    val bottomCircle: ImageElement = new ImageElement("bottom_circle", Resources.bottomCircleFill, Resources.bottomCircleBorder)
+    // Base image
+    val base: ImageElement = new ImageElement(Resources.base)
 
-    topCircle.visible(false)
-    bottomCircle.visible(false)
+    // Top set of images
+    val topSet: Set[ImageElement] =
+        Set(new ImageElement(Resources.topSquare),
+            new ImageElement(Resources.topCircle))
+
+    // Bottom set of images
+    val bottomSet: Set[ImageElement] =
+        Set(new ImageElement(Resources.bottomSquare),
+            new ImageElement(Resources.bottomCircle))
+
+    // Set initial visibility
+    base.visible(true)
+    topSet.find(img => img.name == Resources.topSquare.name).get.visible(true)
+    bottomSet.find(img => img.name == Resources.bottomSquare.name).get.visible(true)
+
+    // Change which image to show from the top set
+    topImageProperty.onChange { (_, oldValue, newValue) =>
+        topSet.find(img => img.name == oldValue).get.visible(false)
+        topSet.find(img => img.name == newValue).get.visible(true)
+    }
+
+    // Change which image to show from the bottom set
+    bottomImageProperty.onChange { (_, oldValue, newValue) =>
+        bottomSet.find(img => img.name == oldValue).get.visible(false)
+        bottomSet.find(img => img.name == newValue).get.visible(true)
+    }
 
     /**
       * Application stage. All user interface elements are contained
@@ -56,13 +75,13 @@ object App extends JFXApp {
         }
 
         // Create a checkbox to toggle drag mode
-        val dragModeCheckbox: CheckBox = new CheckBox("Drag mode") {
+        val dragModeCheckbox: CheckBox = new CheckBox(Properties.dragModeCheckBoxName) {
             margin = Insets(Properties.padding)
-            selected = dragModeActiveProperty()
+            selected = dragModeProperty()
         }
 
         // Link the checkbox to the drag mode property
-        dragModeActiveProperty <== dragModeCheckbox.selected
+        dragModeProperty <== dragModeCheckbox.selected
 
         // Create scene containing all elements and proper resolution
         scene = new Scene(Properties.resolution._1, Properties.resolution._2) {
@@ -74,53 +93,48 @@ object App extends JFXApp {
         }
     }
 
-    topImageProperty.onChange { (_, _, newValue) =>
-        if (newValue == "top_square") {
-            topSquare.visible(true)
-            topCircle.visible(false)
-        } else {
-            topSquare.visible(false)
-            topCircle.visible(true)
-        }
-    }
-
-    bottomImageProperty.onChange { (_, _, newValue) =>
-        if (newValue == "bottom_square") {
-            bottomSquare.visible(true)
-            bottomCircle.visible(false)
-        } else {
-            bottomSquare.visible(false)
-            bottomCircle.visible(true)
-        }
-    }
-
     /**
       * Creates the options panel that houses the controls for
       * designing the dragon.
       *
-      * @return  Node.
+      * @return Node.
       */
     private def createOptionsPanel(): Node = {
         new VBox(Properties.padding) {
             children = Seq(
-                createLabelComboBox("Top", Seq("top_square", "top_circle"), topImageProperty),
-                createLabelComboBox("Bottom", Seq("bottom_square", "bottom_circle"), bottomImageProperty)
+                createLabelComboBox(
+                    Properties.topImageComboBoxName,
+                    Seq(Resources.topSquare.name, Resources.topCircle.name),
+                    topImageProperty),
+                createLabelComboBox(
+                    Properties.bottomImageComboBoxName,
+                    Seq(Resources.bottomSquare.name, Resources.bottomCircle.name),
+                    bottomImageProperty)
             )
             style = Styles.panelStyle
         }
     }
 
-    private def createLabelComboBox(text: String, options: Seq[String], property: StringProperty): Node = {
+    /**
+      * Used to quickly create Combox Boxes with labels, options,
+      * and property listener.
+      *
+      * @param label Text to show on label.
+      * @param options Options to provide in Combo Box.
+      * @param property Property listener for Combo Box to attach to.
+      * @return Node containing Label and Combo Box.
+      */
+    private def createLabelComboBox(label: String, options: Seq[String], property: StringProperty): Node = {
         val cb: ComboBox[String] = new ComboBox(options) {
             value = options.head
-            prefWidth = 125
+            prefWidth = Properties.comboBoxWidth
         }
 
         property <== cb.value
 
         new VBox(Properties.padding) {
             children = Seq(
-                new Label(text),
+                new Label(label),
                 cb
             )
         }
@@ -130,17 +144,11 @@ object App extends JFXApp {
       * Creates the image panel that displays the dragon being made
       * to the user.
       *
-      * @return  Node.
+      * @return Node.
       */
     private def createImagePanel(): Node = {
         new Pane() {
-            children = Seq(
-                bottomSquare.create,
-                bottomCircle.create,
-                base.create,
-                topSquare.create,
-                topCircle.create
-            )
+            children = (bottomSet.toSeq ++ Seq(base) ++ topSet.toSeq).map(img => img.create)
             alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
         }
@@ -149,8 +157,8 @@ object App extends JFXApp {
     /**
       * Makes node draggable within a pane.
       *
-      * @param node  Node to make draggable.
-      * @return      Draggable node.
+      * @param node Node to make draggable.
+      * @return Draggable node.
       */
     private def makeDraggable(node: Node): Node = {
 
@@ -161,7 +169,7 @@ object App extends JFXApp {
         new Group(node) {
             filterEvent(MouseEvent.Any) {
                 me: MouseEvent =>
-                    if (dragModeActiveProperty()) {
+                    if (dragModeProperty()) {
                         me.eventType match {
                             case MouseEvent.MousePressed =>
                                 dragContext.mouseAnchorX = me.x
