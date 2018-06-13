@@ -21,7 +21,7 @@ class ImageElement(resource: Resources.Resource) {
     }
 
     // Border image
-    var borderImg: ImageView = new ImageView(image = new Image(resource.name)) {
+    var borderImg: ImageView = new ImageView(image = new Image(resource.border)) {
         fitWidth = Properties.imageResolution._1
         fitHeight = Properties.imageResolution._2
         visible = false
