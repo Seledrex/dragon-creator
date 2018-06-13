@@ -1,4 +1,4 @@
-package app
+package res
 
 /**
   * Important properties defined here.

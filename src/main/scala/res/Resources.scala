@@ -1,5 +1,4 @@
-package app
-
+package res
 
 /**
   * Image resources that are used in the application.

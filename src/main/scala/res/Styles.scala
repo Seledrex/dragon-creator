@@ -1,4 +1,4 @@
-package app
+package res
 
 /**
   * Styles for user interface elements are defined here.
