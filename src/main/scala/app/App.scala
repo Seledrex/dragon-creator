@@ -2,8 +2,10 @@ package app
 
 import res.{Properties, Resources, Styles}
 import scalafx.Includes._
+import scalafx.scene.paint.Color
 import scalafx.application.JFXApp
-import scalafx.beans.property.{BooleanProperty, StringProperty}
+import scalafx.beans.property._
+import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control._
 import scalafx.scene.input.MouseEvent
@@ -121,21 +123,36 @@ object App extends JFXApp {
       *
       * @param label Text to show on label.
       * @param options Options to provide in Combo Box.
-      * @param property Property listener for Combo Box to attach to.
+      * @param cbProperty Property listener for Combo Box to attach to.
       * @return Node containing Label and Combo Box.
       */
-    private def createLabelComboBox(label: String, options: Seq[String], property: StringProperty): Node = {
+    private def createLabelComboBox(label: String, options: Seq[String],
+                                    cbProperty: StringProperty): Node = {
+
         val cb: ComboBox[String] = new ComboBox(options) {
             value = options.head
             prefWidth = Properties.comboBoxWidth
         }
 
-        property <== cb.value
+        val cp: ColorPicker = new ColorPicker(Color.White) {
+            prefWidth = Properties.comboBoxWidth
+        }
+
+        cbProperty <== cb.value
+
+        cp.onAction = (e: ActionEvent) => {
+            if (label ==  Properties.topImageComboBoxName) {
+                topSet.foreach(img => img.changeColor(cp.value.value.getHue))
+            } else {
+                bottomSet.foreach(img => img.changeColor(cp.value.value.getHue))
+            }
+        }
 
         new VBox(Properties.padding) {
             children = Seq(
                 new Label(label),
-                cb
+                cb,
+                cp
             )
         }
     }
@@ -186,6 +203,7 @@ object App extends JFXApp {
             }
         }
     }
+
 
     /**
       * Defines the dragging context using mouse anchor and

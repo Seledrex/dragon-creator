@@ -1,7 +1,10 @@
 package app
 
+import java.awt.image.BufferedImage
+
 import res.{Properties, Resources}
 import scalafx.geometry.Pos
+import scalafx.scene.effect.ColorAdjust
 import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.layout.Pane
 
@@ -50,4 +53,34 @@ class ImageElement(resource: Resources.Resource) {
         fillImg.visible = v
         borderImg.visible = v
     }
+
+    def changeColor(newHue: Double): Unit = {
+        println("HERE")
+        println(name)
+        val adjust = new ColorAdjust() {
+            hue = newHue
+        }
+        fillImg.effect = adjust
+    }
+
+    /*private def changeFill(img: BufferedImage, colorCode: Int): BufferedImage = {
+        // obtain width and height of image
+        val w = img.getWidth
+        val h = img.getHeight
+
+        // create new image of the same size
+        val out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR)
+
+        // copy pixels (mirror horizontally)
+        for (x <- 0 until w)
+            for (y <- 0 until h)
+                if ((img.getRGB(x, y) >>> 24) != 0) {
+                    out.setRGB(x, y, colorCode)
+                } else {
+                    out.setRGB(x, y, img.getRGB(x, y))
+                }
+
+        out
+    }*/
+
 }
