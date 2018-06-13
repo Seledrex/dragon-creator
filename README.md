@@ -16,6 +16,7 @@ Coded in Scala using ScalaFX and SBT.
     - https://twitter.github.io/scala_school/
     - https://www.tutorialspoint.com/scala/index.htm
     - https://www.scala-exercises.org/
+    - https://danielwestheide.com/blog/2012/11/21/the-neophytes-guide-to-scala-part-1-extractors.html
     - https://alvinalexander.com/downloads/scala/Scala-Cheat-Sheet-devdaily.pdf
 - ScalaFX
     - http://www.scalafx.org/
