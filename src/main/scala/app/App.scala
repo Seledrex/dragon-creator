@@ -3,10 +3,9 @@ package app
 import res.{Properties, Resources, Styles}
 import scalafx.Includes._
 import scalafx.application.JFXApp
-import scalafx.beans.property.BooleanProperty
+import scalafx.beans.property.{BooleanProperty, StringProperty}
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control._
-import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene}
@@ -21,7 +20,18 @@ object App extends JFXApp {
     /**
       * Property that toggles drag mode on and off.
       */
-    private val dragModeActiveProperty = new BooleanProperty(this, "dragModeActive", true)
+    private val dragModeActiveProperty = new BooleanProperty(this, "dragModeActive", false)
+    private val topImageProperty = new StringProperty(this, "topImage", "top_square")
+    private val bottomImageProperty = new StringProperty(this, "bottomImage", "bottom_square")
+
+    val topSquare: ImageElement = new ImageElement("top_square", Resources.topSquareFill, Resources.topSquareBorder)
+    val topCircle: ImageElement = new ImageElement("top_circle", Resources.topCircleFill, Resources.topCircleBorder)
+    val base: ImageElement = new ImageElement("base", Resources.baseFill, Resources.baseBorder)
+    val bottomSquare: ImageElement = new ImageElement("bottom_square", Resources.bottomSquareFill, Resources.bottomSquareBorder)
+    val bottomCircle: ImageElement = new ImageElement("bottom_circle", Resources.bottomCircleFill, Resources.bottomCircleBorder)
+
+    topCircle.visible(false)
+    bottomCircle.visible(false)
 
     /**
       * Application stage. All user interface elements are contained
@@ -64,6 +74,26 @@ object App extends JFXApp {
         }
     }
 
+    topImageProperty.onChange { (_, _, newValue) =>
+        if (newValue == "top_square") {
+            topSquare.visible(true)
+            topCircle.visible(false)
+        } else {
+            topSquare.visible(false)
+            topCircle.visible(true)
+        }
+    }
+
+    bottomImageProperty.onChange { (_, _, newValue) =>
+        if (newValue == "bottom_square") {
+            bottomSquare.visible(true)
+            bottomCircle.visible(false)
+        } else {
+            bottomSquare.visible(false)
+            bottomCircle.visible(true)
+        }
+    }
+
     /**
       * Creates the options panel that houses the controls for
       * designing the dragon.
@@ -73,29 +103,26 @@ object App extends JFXApp {
     private def createOptionsPanel(): Node = {
         new VBox(Properties.padding) {
             children = Seq(
-                new ComboBox(Seq("Option 1", "Option 2", "Option 3")) {
-                    value = "Option 1"
-                },
-                new ComboBox(Seq("Option 1", "Option 2", "Option 3")) {
-                    value = "Option 1"
-                },
-                new ComboBox(Seq("Option 1", "Option 2", "Option 3")) {
-                    value = "Option 1"
-                },
-                new ComboBox(Seq("Option 1", "Option 2", "Option 3")) {
-                    value = "Option 1"
-                },
-                new ComboBox(Seq("Option 1", "Option 2", "Option 3")) {
-                    value = "Option 1"
-                },
-                new ComboBox(Seq("Option 1", "Option 2", "Option 3")) {
-                    value = "Option 1"
-                },
-                new ComboBox(Seq("Option 1", "Option 2", "Option 3")) {
-                    value = "Option 1"
-                }
+                createLabelComboBox("Top", Seq("top_square", "top_circle"), topImageProperty),
+                createLabelComboBox("Bottom", Seq("bottom_square", "bottom_circle"), bottomImageProperty)
             )
             style = Styles.panelStyle
+        }
+    }
+
+    private def createLabelComboBox(text: String, options: Seq[String], property: StringProperty): Node = {
+        val cb: ComboBox[String] = new ComboBox(options) {
+            value = options.head
+            prefWidth = 125
+        }
+
+        property <== cb.value
+
+        new VBox(Properties.padding) {
+            children = Seq(
+                new Label(text),
+                cb
+            )
         }
     }
 
@@ -106,13 +133,15 @@ object App extends JFXApp {
       * @return  Node.
       */
     private def createImagePanel(): Node = {
-        new HBox(Properties.padding) {
+        new Pane() {
             children = Seq(
-                new ImageView(image = new Image(Resources.base)) {
-                    fitWidth = Properties.imageResolution._1
-                    fitHeight = Properties.imageResolution._2
-                }
+                bottomSquare.create,
+                bottomCircle.create,
+                base.create,
+                topSquare.create,
+                topCircle.create
             )
+            alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
         }
     }

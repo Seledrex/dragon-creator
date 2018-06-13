@@ -6,7 +6,7 @@ package res
 object Styles {
 
     final var panelStyle: String = "" +
-        "-fx-background-color: white;" +
+        "-fx-background-color: #f2f2f2;" +
         "-fx-border-color: black;" +
         "-fx-border-width: 2;" +
         "-fx-border-radius: 6;" +
