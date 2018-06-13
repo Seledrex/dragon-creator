@@ -3,7 +3,7 @@ Dragon Creator
 
 Coded in Scala using ScalaFX and SBT.
 
-Resources:
+### Resources:
 - Git
     - https://git-scm.com/
     - https://guides.github.com/introduction/git-handbook/
@@ -23,3 +23,8 @@ Resources:
     - https://github.com/scalafx/ScalaFX-Tutorials
     - https://www.programming-book.com/pro-javafx-8-book/
     - https://github.com/scalafx/ProScalaFX
+  
+### TODO:
+- Create art assets
+- Right click image elements to open color picker
+- Color storage box to keep colors that need to be reused
