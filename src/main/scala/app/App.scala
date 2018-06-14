@@ -51,9 +51,9 @@ object App extends JFXApp {
     bottomSet.find(img => img.name == Res.bottomSquare.name).get.visible(true)
 
     // Set the change listener for each set
-    imgList.foreach(s => s._3._1.onChange { (_, oldValue, newValue) =>
-        s._3._2.find(img => img.name == oldValue).get.visible(false)
-        s._3._2.find(img => img.name == newValue).get.visible(true)
+    imgList.foreach(x => x._3._1.onChange { (_, oldValue, newValue) =>
+        x._3._2.find(img => img.name == oldValue).get.visible(false)
+        x._3._2.find(img => img.name == newValue).get.visible(true)
     })
 
     /**
@@ -116,10 +116,10 @@ object App extends JFXApp {
       *
       * @param label Text to show on label.
       * @param options Options to provide in Combo Box.
-      * @param p Property listener and set tuple.
+      * @param x Property listener and set tuple.
       * @return Node containing Label and Combo Box.
       */
-    private def createElementControl(label: String, options: Seq[String], p: (StringProperty, Set[ImgElem])): Node = {
+    private def createElementControl(label: String, options: Seq[String], x: (StringProperty, Set[ImgElem])): Node = {
 
         // Create combo box
         val cb: ComboBox[String] = new ComboBox(options) {
@@ -133,11 +133,11 @@ object App extends JFXApp {
         }
 
         // Bind combo box property to value
-        p._1 <== cb.value
+        x._1 <== cb.value
 
         // Set event handler for changing colors
         cp.onAction = (e: ActionEvent) => {
-            p._2.foreach(img => img.changeColor(cp.getValue))
+            x._2.foreach(img => img.changeColor(cp.getValue))
         }
 
         // Organize vertically
@@ -158,7 +158,7 @@ object App extends JFXApp {
       */
     private def createImagePanel(): Node = {
         new Pane() {
-            children = imgList.map(p => p._3._2).flatMap(set => set.toSeq).map(img => img.create)
+            children = imgList.map(x => x._3._2).flatMap(set => set.toSeq).map(img => img.create)
             alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
         }
