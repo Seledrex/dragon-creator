@@ -8,32 +8,32 @@ object Res {
     final class Resource(val name: String, val fill: String, val border: String)
 
     final val baseCircle = new Resource(
-        "base_circle",
+        "Circle",
         "base_circle_fill.png",
         "base_circle_border.png")
 
     final val baseSquare = new Resource(
-        "base_square",
+        "Square",
         "base_square_fill.png",
         "base_square_border.png")
 
     final val topCircle = new Resource(
-        "top_circle",
+        "Circle",
         "top_circle_fill.png",
         "top_circle_border.png")
 
     final val topSquare = new Resource(
-        "top_square",
+        "Square",
         "top_square_fill.png",
         "top_square_border.png")
 
     final val bottomCircle = new Resource(
-        "bottom_circle",
+        "Circle",
         "bottom_circle_fill.png",
         "bottom_circle_border.png")
 
     final val bottomSquare = new Resource(
-        "bottom_square",
+        "Square",
         "bottom_square_fill.png",
         "bottom_square_border.png")
 

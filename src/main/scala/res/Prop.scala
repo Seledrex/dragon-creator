@@ -20,9 +20,9 @@ object Prop {
     // Check mark label
     final val dragModeCheckBoxName = "Drag mode"
 
-    // Combo box names
-    final val baseComboBoxName = "Base"
-    final val topComboBoxName = "Top"
-    final val bottomComboBoxName = "Bottom"
+    // Label names
+    final val baseLabel = "Base"
+    final val topLabel = "Top"
+    final val bottomLabel = "Bottom"
 
 }

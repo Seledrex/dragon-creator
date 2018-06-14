@@ -39,28 +39,22 @@ object App extends JFXApp {
         Set(new ImgElem(Res.bottomSquare),
             new ImgElem(Res.bottomCircle))
 
+    // Put all sets into a list
+    val imgList: List[(String, Seq[String], (StringProperty, Set[ImgElem]))] = List(
+        (Prop.bottomLabel, Seq(Res.bottomSquare.name, Res.bottomCircle.name), (bottomProp, bottomSet)),
+        (Prop.baseLabel, Seq(Res.baseSquare.name, Res.baseCircle.name), (baseProp, baseSet)),
+        (Prop.topLabel, Seq(Res.topSquare.name, Res.topCircle.name), (topProp, topSet)))
+
     // Set initial visibility
     baseSet.find(img => img.name == Res.baseSquare.name).get.visible(true)
     topSet.find(img => img.name == Res.topSquare.name).get.visible(true)
     bottomSet.find(img => img.name == Res.bottomSquare.name).get.visible(true)
 
-    // Change which image to show from the base set
-    baseProp.onChange { (_, oldValue, newValue) =>
-        baseSet.find(img => img.name == oldValue).get.visible(false)
-        baseSet.find(img => img.name == newValue).get.visible(true)
-    }
-
-    // Change which image to show from the top set
-    topProp.onChange { (_, oldValue, newValue) =>
-        topSet.find(img => img.name == oldValue).get.visible(false)
-        topSet.find(img => img.name == newValue).get.visible(true)
-    }
-
-    // Change which image to show from the bottom set
-    bottomProp.onChange { (_, oldValue, newValue) =>
-        bottomSet.find(img => img.name == oldValue).get.visible(false)
-        bottomSet.find(img => img.name == newValue).get.visible(true)
-    }
+    // Set the change listener for each set
+    imgList.foreach(s => s._3._1.onChange { (_, oldValue, newValue) =>
+        s._3._2.find(img => img.name == oldValue).get.visible(false)
+        s._3._2.find(img => img.name == newValue).get.visible(true)
+    })
 
     /**
       * Application stage. All user interface elements are contained
@@ -111,34 +105,21 @@ object App extends JFXApp {
       */
     private def createOptionsPanel(): Node = {
         new VBox(Prop.padding) {
-            children = Seq(
-                createLabelComboBox(
-                    Prop.topComboBoxName,
-                    Seq(Res.topSquare.name, Res.topCircle.name),
-                    topProp),
-                createLabelComboBox(
-                    Prop.baseComboBoxName,
-                    Seq(Res.baseSquare.name, Res.baseCircle.name),
-                    baseProp),
-                createLabelComboBox(
-                    Prop.bottomComboBoxName,
-                    Seq(Res.bottomSquare.name, Res.bottomCircle.name),
-                    bottomProp))
+            children = imgList.reverse.map(x => createElementControl(x._1, x._2, x._3))
             style = Styles.panelStyle
         }
     }
 
     /**
       * Used to quickly create Combox Boxes with labels, options,
-      * and property listener.
+      * property listener, and color picker.
       *
       * @param label Text to show on label.
       * @param options Options to provide in Combo Box.
-      * @param cbProperty Property listener for Combo Box to attach to.
+      * @param p Property listener and set tuple.
       * @return Node containing Label and Combo Box.
       */
-    private def createLabelComboBox(label: String, options: Seq[String],
-                                    cbProperty: StringProperty): Node = {
+    private def createElementControl(label: String, options: Seq[String], p: (StringProperty, Set[ImgElem])): Node = {
 
         // Create combo box
         val cb: ComboBox[String] = new ComboBox(options) {
@@ -152,19 +133,11 @@ object App extends JFXApp {
         }
 
         // Bind combo box property to value
-        cbProperty <== cb.value
+        p._1 <== cb.value
 
         // Set event handler for changing colors
         cp.onAction = (e: ActionEvent) => {
-            label match {
-                case Prop.baseComboBoxName =>
-                    baseSet.foreach(img => img.changeColor(cp.getValue))
-                case Prop.`topComboBoxName` =>
-                    topSet.foreach(img => img.changeColor(cp.getValue))
-                case Prop.`bottomComboBoxName` =>
-                    bottomSet.foreach(img => img.changeColor(cp.getValue))
-            }
-            e.consume()
+            p._2.foreach(img => img.changeColor(cp.getValue))
         }
 
         // Organize vertically
@@ -185,7 +158,7 @@ object App extends JFXApp {
       */
     private def createImagePanel(): Node = {
         new Pane() {
-            children = (bottomSet.toSeq ++ baseSet.toSeq ++ topSet.toSeq).map(img => img.create)
+            children = imgList.map(p => p._3._2).flatMap(set => set.toSeq).map(img => img.create)
             alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
         }
