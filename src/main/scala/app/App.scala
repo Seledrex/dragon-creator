@@ -78,7 +78,7 @@ object App extends JFXApp {
             val imagePanel: Node = makeDraggable(createImagePanel())
 
             optionPanel.relocate(Prop.padding, Prop.padding)
-            imagePanel.relocate(130, 70)
+            imagePanel.relocate(170, 70)
 
             children = Seq(imagePanel, optionPanel)
             alignmentInParent = Pos.TopLeft
