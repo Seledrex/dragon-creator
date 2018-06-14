@@ -5,16 +5,16 @@ package res
   */
 object Properties {
 
-    final var title: String = "Dragon Creator"
-    final var resolution: (Double, Double) = (1280, 720)
-    final var imageResolution: (Double, Double) = (resolution._1 / 1.25, resolution._2 / 1.25)
-    final var padding: Int = 5
-    final var comboBoxWidth: Int = 125
-    final var dragModePropertyName = "dragModeActive"
-    final var topImagePropertyName = "topImage"
-    final var bottomImagePropertyName = "bottomImage"
-    final var dragModeCheckBoxName = "Drag mode"
-    final var topImageComboBoxName = "Top"
-    final var bottomImageComboBoxName = "Bottom"
+    final val title: String = "Dragon Creator"
+    final val resolution: (Double, Double) = (1280, 720)
+    final val imageResolution: (Double, Double) = (resolution._1 / 1.25, resolution._2 / 1.25)
+    final val padding: Int = 5
+    final val comboBoxWidth: Int = 125
+    final val dragModePropertyName = "dragModeActive"
+    final val topImagePropertyName = "topImage"
+    final val bottomImagePropertyName = "bottomImage"
+    final val dragModeCheckBoxName = "Drag mode"
+    final val topImageComboBoxName = "Top"
+    final val bottomImageComboBoxName = "Bottom"
 
 }

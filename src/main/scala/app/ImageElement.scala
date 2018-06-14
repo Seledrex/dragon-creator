@@ -1,12 +1,10 @@
 package app
 
-import java.awt.image.BufferedImage
-
 import res.{Properties, Resources}
 import scalafx.geometry.Pos
-import scalafx.scene.effect.ColorAdjust
-import scalafx.scene.image.{Image, ImageView}
+import scalafx.scene.image.{Image, ImageView, WritableImage}
 import scalafx.scene.layout.Pane
+import scalafx.scene.paint.Color
 
 /**
   * Class definition for an image element that appears on the interface. Consists
@@ -29,6 +27,15 @@ class ImageElement(resource: Resources.Resource) {
         fitHeight = Properties.imageResolution._2
         visible = false
     }
+
+    // Save dimensions of image
+    private val width = fillImg.getImage.getWidth.toInt
+    private val height = fillImg.getImage.getHeight.toInt
+
+    // Used for updating the image's color
+    private val pixelReader = fillImg.getImage.getPixelReader
+    private val writableImage = new WritableImage(width, height)
+    private val pixelWriter = writableImage.getPixelWriter
 
     // Name of resource
     val name: String = resource.name
@@ -54,33 +61,20 @@ class ImageElement(resource: Resources.Resource) {
         borderImg.visible = v
     }
 
-    def changeColor(newHue: Double): Unit = {
-        println("HERE")
-        println(name)
-        val adjust = new ColorAdjust() {
-            hue = newHue
-        }
-        fillImg.effect = adjust
-    }
-
-    /*private def changeFill(img: BufferedImage, colorCode: Int): BufferedImage = {
-        // obtain width and height of image
-        val w = img.getWidth
-        val h = img.getHeight
-
-        // create new image of the same size
-        val out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR)
-
-        // copy pixels (mirror horizontally)
-        for (x <- 0 until w)
-            for (y <- 0 until h)
-                if ((img.getRGB(x, y) >>> 24) != 0) {
-                    out.setRGB(x, y, colorCode)
-                } else {
-                    out.setRGB(x, y, img.getRGB(x, y))
+    /**
+      * Changes the color of the image's fill.
+      *
+      * @param color Color to change to.
+      */
+    def changeColor(color: Color): Unit = {
+        for (x <- 0 until width) {
+            for (y <- 0 until height) {
+                if (pixelReader.getColor(x, y).isOpaque) {
+                    pixelWriter.setColor(x, y, color)
                 }
+            }
+        }
 
-        out
-    }*/
-
+        fillImg.setImage(writableImage)
+    }
 }

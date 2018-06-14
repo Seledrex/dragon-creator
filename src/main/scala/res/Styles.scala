@@ -5,7 +5,7 @@ package res
   */
 object Styles {
 
-    final var panelStyle: String = "" +
+    final val panelStyle: String = "" +
         "-fx-background-color: #f2f2f2;" +
         "-fx-border-color: black;" +
         "-fx-border-width: 2;" +
@@ -13,7 +13,7 @@ object Styles {
         "-fx-background-radius: 6;" +
         "-fx-padding: 6;"
 
-    final var backgroundStyle: String = "" +
+    final val backgroundStyle: String = "" +
         "-fx-background-color: #99baef;"
 
 }

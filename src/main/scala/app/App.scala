@@ -129,25 +129,32 @@ object App extends JFXApp {
     private def createLabelComboBox(label: String, options: Seq[String],
                                     cbProperty: StringProperty): Node = {
 
+        // Create combo box
         val cb: ComboBox[String] = new ComboBox(options) {
             value = options.head
             prefWidth = Properties.comboBoxWidth
         }
 
+        // Create color picker
         val cp: ColorPicker = new ColorPicker(Color.White) {
             prefWidth = Properties.comboBoxWidth
         }
 
+        // Bind combo box property to value
         cbProperty <== cb.value
 
+        // Set event handler for changing colors
         cp.onAction = (e: ActionEvent) => {
-            if (label ==  Properties.topImageComboBoxName) {
-                topSet.foreach(img => img.changeColor(cp.value.value.getHue))
-            } else {
-                bottomSet.foreach(img => img.changeColor(cp.value.value.getHue))
+            label match {
+                case Properties.topImageComboBoxName =>
+                    topSet.foreach(img => img.changeColor(cp.getValue))
+                case Properties.bottomImageComboBoxName =>
+                    bottomSet.foreach(img => img.changeColor(cp.getValue))
             }
+            e.consume()
         }
 
+        // Organize vertically
         new VBox(Properties.padding) {
             children = Seq(
                 new Label(label),
@@ -204,7 +211,6 @@ object App extends JFXApp {
         }
     }
 
-
     /**
       * Defines the dragging context using mouse anchor and
       * initial translation.
@@ -215,6 +221,4 @@ object App extends JFXApp {
         var initialTranslateX: Double = 0d
         var initialTranslateY: Double = 0d
     }
-
-
 }
