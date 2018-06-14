@@ -28,6 +28,8 @@ class ImgElem(resource: Res.Resource) {
         visible = false
     }
 
+    var isVisible: Boolean = false
+
     // Save dimensions of image
     private val width = fillImg.getImage.getWidth.toInt
     private val height = fillImg.getImage.getHeight.toInt
@@ -59,6 +61,7 @@ class ImgElem(resource: Res.Resource) {
     def visible(v: Boolean): Unit = {
         fillImg.visible = v
         borderImg.visible = v
+        isVisible = v
     }
 
     /**

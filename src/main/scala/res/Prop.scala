@@ -9,7 +9,10 @@ object Prop {
     final val resolution: (Double, Double) = (1280, 720)
     final val imgRes: (Double, Double) = (resolution._1 / 1.25, resolution._2 / 1.25)
     final val padding: Int = 5
+
+    // Widths
     final val pickerWidth: Int = 125
+    final val buttonWidth: Int = 85
 
     // Property names
     final val dragModePropName = "dragModeProp"

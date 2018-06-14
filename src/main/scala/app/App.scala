@@ -1,16 +1,21 @@
 package app
 
+import java.io.File
+import javax.imageio.ImageIO
 import res.{Prop, Res, Styles}
 import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalafx.application.JFXApp
 import scalafx.beans.property._
+import scalafx.embed.swing.SwingFXUtils
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control._
+import scalafx.scene.effect.BlendMode
+import scalafx.scene.image.WritableImage
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
-import scalafx.scene.{Group, Node, Scene}
+import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
 
 /**
   * Dragon Creator ScalaFX application.
@@ -68,13 +73,15 @@ object App extends JFXApp {
 
         // Create a pane that holds multiple panels
         val panelsPane: Pane = new Pane() {
+            val filePanel: Node = makeDraggable(createFilePanel())
             val optionPanel: Node = makeDraggable(createOptionsPanel())
             val imagePanel: Node = makeDraggable(createImagePanel())
 
-            optionPanel.relocate(Prop.padding, Prop.padding)
-            imagePanel.relocate(170, 70)
+            filePanel.relocate(Prop.padding, Prop.padding)
+            optionPanel.relocate(Prop.padding, 50)
+            imagePanel.relocate(150, 50)
 
-            children = Seq(imagePanel, optionPanel)
+            children = Seq(imagePanel, optionPanel, filePanel)
             alignmentInParent = Pos.TopLeft
         }
 
@@ -160,6 +167,52 @@ object App extends JFXApp {
         new Pane() {
             children = imgList.map(x => x._3._2).flatMap(set => set.toSeq).map(img => img.create)
             alignmentInParent = Pos.TopLeft
+            style = Styles.panelStyle
+        }
+    }
+
+    private def createFilePanel(): Node = {
+        new HBox(Prop.padding) {
+            children = Seq(
+                new Button("New") {
+                    prefWidth = Prop.buttonWidth
+                },
+                new Button("Open...") {
+                    prefWidth = Prop.buttonWidth
+                },
+                new Button("Save") {
+                    prefWidth = Prop.buttonWidth
+                },
+                new Button("Save As...") {
+                    prefWidth = Prop.buttonWidth
+                },
+                new Button("Save Image...") {
+                    prefWidth = Prop.buttonWidth
+                    onAction = (e: ActionEvent) => {
+                        val group: Group = new Group() {
+                            children = imgList
+                                .map(x => x._3._2)
+                                .flatMap(set => set.toSeq)
+                                .filter(img => { img.isVisible })
+                                .flatMap(img => Seq(img.fillImg, img.borderImg))
+                            blendMode = BlendMode.SrcAtop
+                        }
+                        val wr = new WritableImage(Prop.resolution._1.toInt, Prop.resolution._2.toInt)
+                        val out = group.snapshot(new SnapshotParameters(), wr)
+                        val file: File = new File("test.png")
+                        ImageIO.write(SwingFXUtils.fromFXImage(out, null), "png", file)
+                        println("HERE1")
+                        Thread.sleep(5000)
+                        println("HERE2")
+                    }
+                },
+                new Button("Quit") {
+                    prefWidth = Prop.buttonWidth
+                    onAction = (e: ActionEvent) => {
+                        System.exit(0)
+                    }
+                }
+            )
             style = Styles.panelStyle
         }
     }
