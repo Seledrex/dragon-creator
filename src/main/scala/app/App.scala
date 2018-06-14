@@ -1,6 +1,6 @@
 package app
 
-import res.{Properties, Resources, Styles}
+import res.{Prop, Res, Styles}
 import scalafx.Includes._
 import scalafx.scene.paint.Color
 import scalafx.application.JFXApp
@@ -20,36 +20,44 @@ import scalafx.scene.{Group, Node, Scene}
 object App extends JFXApp {
 
     // Properties
-    private val dragModeProperty = new BooleanProperty(this, Properties.dragModePropertyName, false)
-    private val topImageProperty = new StringProperty(this, Properties.topImagePropertyName, Resources.topSquare.name)
-    private val bottomImageProperty = new StringProperty(this, Properties.bottomImagePropertyName, Resources.bottomSquare.name)
+    private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
+    private val baseProp = new StringProperty(this, Prop.basePropName, Res.baseSquare.name)
+    private val topProp = new StringProperty(this, Prop.topPropName, Res.topSquare.name)
+    private val bottomProp = new StringProperty(this, Prop.bottomPropName, Res.bottomSquare.name)
 
-    // Base image
-    val base: ImageElement = new ImageElement(Resources.base)
+    val baseSet: Set[ImgElem] =
+        Set(new ImgElem(Res.baseSquare),
+            new ImgElem(Res.baseCircle))
 
     // Top set of images
-    val topSet: Set[ImageElement] =
-        Set(new ImageElement(Resources.topSquare),
-            new ImageElement(Resources.topCircle))
+    val topSet: Set[ImgElem] =
+        Set(new ImgElem(Res.topSquare),
+            new ImgElem(Res.topCircle))
 
     // Bottom set of images
-    val bottomSet: Set[ImageElement] =
-        Set(new ImageElement(Resources.bottomSquare),
-            new ImageElement(Resources.bottomCircle))
+    val bottomSet: Set[ImgElem] =
+        Set(new ImgElem(Res.bottomSquare),
+            new ImgElem(Res.bottomCircle))
 
     // Set initial visibility
-    base.visible(true)
-    topSet.find(img => img.name == Resources.topSquare.name).get.visible(true)
-    bottomSet.find(img => img.name == Resources.bottomSquare.name).get.visible(true)
+    baseSet.find(img => img.name == Res.baseSquare.name).get.visible(true)
+    topSet.find(img => img.name == Res.topSquare.name).get.visible(true)
+    bottomSet.find(img => img.name == Res.bottomSquare.name).get.visible(true)
+
+    // Change which image to show from the base set
+    baseProp.onChange { (_, oldValue, newValue) =>
+        baseSet.find(img => img.name == oldValue).get.visible(false)
+        baseSet.find(img => img.name == newValue).get.visible(true)
+    }
 
     // Change which image to show from the top set
-    topImageProperty.onChange { (_, oldValue, newValue) =>
+    topProp.onChange { (_, oldValue, newValue) =>
         topSet.find(img => img.name == oldValue).get.visible(false)
         topSet.find(img => img.name == newValue).get.visible(true)
     }
 
     // Change which image to show from the bottom set
-    bottomImageProperty.onChange { (_, oldValue, newValue) =>
+    bottomProp.onChange { (_, oldValue, newValue) =>
         bottomSet.find(img => img.name == oldValue).get.visible(false)
         bottomSet.find(img => img.name == newValue).get.visible(true)
     }
@@ -61,7 +69,7 @@ object App extends JFXApp {
     stage = new JFXApp.PrimaryStage() {
 
         // Set parameters
-        title = Properties.title
+        title = Prop.title
         resizable = false
 
         // Create a pane that holds multiple panels
@@ -69,7 +77,7 @@ object App extends JFXApp {
             val optionPanel: Node = makeDraggable(createOptionsPanel())
             val imagePanel: Node = makeDraggable(createImagePanel())
 
-            optionPanel.relocate(Properties.padding, Properties.padding)
+            optionPanel.relocate(Prop.padding, Prop.padding)
             imagePanel.relocate(130, 70)
 
             children = Seq(imagePanel, optionPanel)
@@ -77,16 +85,16 @@ object App extends JFXApp {
         }
 
         // Create a checkbox to toggle drag mode
-        val dragModeCheckbox: CheckBox = new CheckBox(Properties.dragModeCheckBoxName) {
-            margin = Insets(Properties.padding)
-            selected = dragModeProperty()
+        val dragModeCheckbox: CheckBox = new CheckBox(Prop.dragModeCheckBoxName) {
+            margin = Insets(Prop.padding)
+            selected = dragModeProp()
         }
 
         // Link the checkbox to the drag mode property
-        dragModeProperty <== dragModeCheckbox.selected
+        dragModeProp <== dragModeCheckbox.selected
 
         // Create scene containing all elements and proper resolution
-        scene = new Scene(Properties.resolution._1, Properties.resolution._2) {
+        scene = new Scene(Prop.resolution._1, Prop.resolution._2) {
             root = new BorderPane() {
                 center = panelsPane
                 bottom = dragModeCheckbox
@@ -102,17 +110,20 @@ object App extends JFXApp {
       * @return Node.
       */
     private def createOptionsPanel(): Node = {
-        new VBox(Properties.padding) {
+        new VBox(Prop.padding) {
             children = Seq(
                 createLabelComboBox(
-                    Properties.topImageComboBoxName,
-                    Seq(Resources.topSquare.name, Resources.topCircle.name),
-                    topImageProperty),
+                    Prop.topComboBoxName,
+                    Seq(Res.topSquare.name, Res.topCircle.name),
+                    topProp),
                 createLabelComboBox(
-                    Properties.bottomImageComboBoxName,
-                    Seq(Resources.bottomSquare.name, Resources.bottomCircle.name),
-                    bottomImageProperty)
-            )
+                    Prop.baseComboBoxName,
+                    Seq(Res.baseSquare.name, Res.baseCircle.name),
+                    baseProp),
+                createLabelComboBox(
+                    Prop.bottomComboBoxName,
+                    Seq(Res.bottomSquare.name, Res.bottomCircle.name),
+                    bottomProp))
             style = Styles.panelStyle
         }
     }
@@ -132,12 +143,12 @@ object App extends JFXApp {
         // Create combo box
         val cb: ComboBox[String] = new ComboBox(options) {
             value = options.head
-            prefWidth = Properties.comboBoxWidth
+            prefWidth = Prop.pickerWidth
         }
 
         // Create color picker
         val cp: ColorPicker = new ColorPicker(Color.White) {
-            prefWidth = Properties.comboBoxWidth
+            prefWidth = Prop.pickerWidth
         }
 
         // Bind combo box property to value
@@ -146,16 +157,18 @@ object App extends JFXApp {
         // Set event handler for changing colors
         cp.onAction = (e: ActionEvent) => {
             label match {
-                case Properties.topImageComboBoxName =>
+                case Prop.baseComboBoxName =>
+                    baseSet.foreach(img => img.changeColor(cp.getValue))
+                case Prop.`topComboBoxName` =>
                     topSet.foreach(img => img.changeColor(cp.getValue))
-                case Properties.bottomImageComboBoxName =>
+                case Prop.`bottomComboBoxName` =>
                     bottomSet.foreach(img => img.changeColor(cp.getValue))
             }
             e.consume()
         }
 
         // Organize vertically
-        new VBox(Properties.padding) {
+        new VBox(Prop.padding) {
             children = Seq(
                 new Label(label),
                 cb,
@@ -172,7 +185,7 @@ object App extends JFXApp {
       */
     private def createImagePanel(): Node = {
         new Pane() {
-            children = (bottomSet.toSeq ++ Seq(base) ++ topSet.toSeq).map(img => img.create)
+            children = (bottomSet.toSeq ++ baseSet.toSeq ++ topSet.toSeq).map(img => img.create)
             alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
         }
@@ -193,7 +206,7 @@ object App extends JFXApp {
         new Group(node) {
             filterEvent(MouseEvent.Any) {
                 me: MouseEvent =>
-                    if (dragModeProperty()) {
+                    if (dragModeProp()) {
                         me.eventType match {
                             case MouseEvent.MousePressed =>
                                 dragContext.mouseAnchorX = me.x

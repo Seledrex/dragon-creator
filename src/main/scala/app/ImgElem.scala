@@ -1,6 +1,6 @@
 package app
 
-import res.{Properties, Resources}
+import res.{Prop, Res}
 import scalafx.geometry.Pos
 import scalafx.scene.image.{Image, ImageView, WritableImage}
 import scalafx.scene.layout.Pane
@@ -12,19 +12,19 @@ import scalafx.scene.paint.Color
   *
   * @param resource Resource to turn into image element.
   */
-class ImageElement(resource: Resources.Resource) {
+class ImgElem(resource: Res.Resource) {
 
     // Fill image
     var fillImg: ImageView = new ImageView(image = new Image(resource.fill)) {
-        fitWidth = Properties.imageResolution._1
-        fitHeight = Properties.imageResolution._2
+        fitWidth = Prop.imgRes._1
+        fitHeight = Prop.imgRes._2
         visible = false
     }
 
     // Border image
     var borderImg: ImageView = new ImageView(image = new Image(resource.border)) {
-        fitWidth = Properties.imageResolution._1
-        fitHeight = Properties.imageResolution._2
+        fitWidth = Prop.imgRes._1
+        fitHeight = Prop.imgRes._2
         visible = false
     }
 

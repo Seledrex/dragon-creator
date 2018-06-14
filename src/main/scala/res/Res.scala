@@ -3,14 +3,19 @@ package res
 /**
   * Image resources that are used in the application.
   */
-object Resources {
+object Res {
 
     final class Resource(val name: String, val fill: String, val border: String)
 
-    final val base = new Resource(
-        "base",
-        "base_fill.png",
-        "base_border.png")
+    final val baseCircle = new Resource(
+        "base_circle",
+        "base_circle_fill.png",
+        "base_circle_border.png")
+
+    final val baseSquare = new Resource(
+        "base_square",
+        "base_square_fill.png",
+        "base_square_border.png")
 
     final val topCircle = new Resource(
         "top_circle",
