@@ -12,7 +12,7 @@ import scalafx.scene.paint.Color
   *
   * @param resource Resource to turn into image element.
   */
-class ImgElem(resource: Res.Resource) {
+class ImgElem(val resource: Res.Resource) {
 
     // Fill image
     var fillImg: ImageView = new ImageView(image = new Image(resource.fill)) {
@@ -28,7 +28,11 @@ class ImgElem(resource: Res.Resource) {
         visible = false
     }
 
+    // Visible boolean
     var isVisible: Boolean = false
+
+    // Color of element
+    var color: Color = Color.White
 
     // Save dimensions of image
     private val width = fillImg.getImage.getWidth.toInt
@@ -79,5 +83,6 @@ class ImgElem(resource: Res.Resource) {
         }
 
         fillImg.setImage(writableImage)
+        this.color = color
     }
 }

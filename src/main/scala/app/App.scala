@@ -1,7 +1,8 @@
 package app
 
-import java.io.File
+import java.io.{PrintWriter, StringWriter}
 import javax.imageio.ImageIO
+import org.apache.commons.io.FilenameUtils
 import res.{Prop, Res, Styles}
 import scalafx.Includes._
 import scalafx.scene.paint.Color
@@ -10,12 +11,14 @@ import scalafx.beans.property._
 import scalafx.embed.swing.SwingFXUtils
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
+import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.WritableImage
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
+import scalafx.stage.FileChooser
 
 /**
   * Dragon Creator ScalaFX application.
@@ -171,42 +174,82 @@ object App extends JFXApp {
         }
     }
 
+    /**
+      * Creates the file panel which gives users basic controls.
+      *
+      * @return Node.
+      */
     private def createFilePanel(): Node = {
         new HBox(Prop.padding) {
             children = Seq(
-                new Button("New") {
+                new Button(Prop.newButton) {
                     prefWidth = Prop.buttonWidth
                 },
-                new Button("Open...") {
+                new Button(Prop.openButton) {
                     prefWidth = Prop.buttonWidth
                 },
-                new Button("Save") {
+                new Button(Prop.saveButton) {
                     prefWidth = Prop.buttonWidth
                 },
-                new Button("Save As...") {
+                new Button(Prop.saveAsButton) {
                     prefWidth = Prop.buttonWidth
                 },
-                new Button("Save Image...") {
+                new Button(Prop.saveImageButton) {
                     prefWidth = Prop.buttonWidth
-                    onAction = (e: ActionEvent) => {
-                        val group: Group = new Group() {
-                            children = imgList
-                                .map(x => x._3._2)
-                                .flatMap(set => set.toSeq)
-                                .filter(img => { img.isVisible })
-                                .flatMap(img => Seq(img.fillImg, img.borderImg))
-                            blendMode = BlendMode.SrcAtop
+                    onAction = (_: ActionEvent) => {
+                        // Create file chooser
+                        val chooser = new FileChooser() {
+                            title = Prop.fileChooserTitle
+                            extensionFilters.addAll(
+                                new FileChooser.ExtensionFilter("PNG", "*.png"))
                         }
-                        val wr = new WritableImage(Prop.resolution._1.toInt, Prop.resolution._2.toInt)
-                        val out = group.snapshot(new SnapshotParameters(), wr)
-                        val file: File = new File("test.png")
-                        ImageIO.write(SwingFXUtils.fromFXImage(out, null), "png", file)
-                        println("HERE1")
-                        Thread.sleep(5000)
-                        println("HERE2")
+
+                        // Prompt user to choose file
+                        val file = chooser.showSaveDialog(stage)
+
+                        // Check if a file is chosen
+                        if (file != null) {
+
+                            // Group together visible elements and make copies
+                            val group: Group = new Group() {
+                                children = imgList
+                                    .map(x => x._3._2)
+                                    .flatMap(set => set.toSeq)
+                                    .filter(img => img.isVisible)
+                                    .map(img => (img.resource, img.color))
+                                    .map(x => {
+                                        val copy = new ImgElem(x._1)
+                                        copy.visible(true)
+                                        copy.changeColor(x._2)
+                                        copy })
+                                    .flatMap(x => Seq(x.fillImg, x.borderImg))
+                                blendMode = BlendMode.SrcAtop
+                            }
+
+                            // Create snapshot of group
+                            val wr = new WritableImage(Prop.imgRes._1.toInt, Prop.imgRes._2.toInt)
+                            val out = group.snapshot(new SnapshotParameters(), wr)
+
+                            // Attempt to save image to disk
+                            try {
+                                ImageIO.write(
+                                    SwingFXUtils.fromFXImage(out, null),
+                                    FilenameUtils.getExtension(file.getAbsolutePath),
+                                    file)
+                                new Alert(AlertType.Information) {
+                                    initOwner(stage)
+                                    title = Prop.alertSuccess
+                                    headerText = "Successfully saved image."
+                                    contentText = "The image was saved successfully to " + file.getAbsolutePath
+                                }.showAndWait()
+                            } catch {
+                                case e: Exception => createExceptionDialog(e,
+                                    "Error saving image.", e.getMessage).showAndWait()
+                            }
+                        }
                     }
                 },
-                new Button("Quit") {
+                new Button(Prop.quitButton) {
                     prefWidth = Prop.buttonWidth
                     onAction = (e: ActionEvent) => {
                         System.exit(0)
@@ -247,6 +290,49 @@ object App extends JFXApp {
                         me.consume()
                     }
             }
+        }
+    }
+
+    /**
+      * Creates a new exception dialog.
+      *
+      * @param e Exception to create dialog for.
+      * @param header Header of dialog.
+      * @param content Content of dialog.
+      * @return Alert.
+      */
+    private def createExceptionDialog(e: Exception, header: String, content: String): Alert = {
+        val exceptionText = {
+            val sw = new StringWriter()
+            val pw = new PrintWriter(sw)
+            e.printStackTrace(pw)
+            sw.toString
+        }
+
+        val label = new Label("The exception stacktrace was:")
+
+        val textArea = new TextArea {
+            text = exceptionText
+            editable = false
+            wrapText = true
+            maxWidth = Double.MaxValue
+            maxHeight = Double.MaxValue
+            vgrow = Priority.Always
+            hgrow = Priority.Always
+        }
+
+        val expContent = new GridPane {
+            maxWidth = Double.MaxValue
+            add(label, 0, 0)
+            add(textArea, 0, 1)
+        }
+
+        new Alert(AlertType.Error) {
+            initOwner(stage)
+            title = Prop.alertError
+            headerText = header
+            contentText = content
+            dialogPane().expandableContent = expContent
         }
     }
 

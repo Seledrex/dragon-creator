@@ -28,4 +28,19 @@ object Prop {
     final val topLabel = "Top"
     final val bottomLabel = "Bottom"
 
+    // Button names
+    final val newButton = "New"
+    final val openButton = "Open"
+    final val saveButton = "Save"
+    final val saveAsButton = "Save As..."
+    final val saveImageButton = "Save Image..."
+    final val quitButton = "Quit"
+
+    // Alerts
+    final val alertSuccess = "Success"
+    final val alertError = "Error"
+
+    // File chooser
+    final val fileChooserTitle = "Choose File"
+
 }
