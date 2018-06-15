@@ -11,7 +11,9 @@ object Styles {
         "-fx-border-width: 2;" +
         "-fx-border-radius: 6;" +
         "-fx-background-radius: 6;" +
-        "-fx-padding: 6;"
+        "-fx-padding: 6;" +
+        "-fx-font-size: 9pt;" +
+        "-fx-font-family: \"Helvetica\";"
 
     final val backgroundStyle: String = "" +
         "-fx-background-color: #99baef;"
