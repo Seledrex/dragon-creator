@@ -29,23 +29,24 @@ object App extends JFXApp {
 
     // Properties
     private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
+
+    // Base
     private val baseCBProp = new StringProperty(this, Prop.baseCBPropName, Res.baseSquare.name)
     private val baseCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.baseCPPropName, Color.White)
-    private val topCBProp = new StringProperty(this, Prop.topCBPropName, Res.topSquare.name)
-    private val topCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.topCPPropName, Color.White)
-    private val bottomCBProp = new StringProperty(this, Prop.bottomCBPropName, Res.bottomSquare.name)
-    private val bottomCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.bottomCPPropName, Color.White)
-
     val baseSet: Set[ImgElem] =
         Set(new ImgElem(Res.baseSquare),
             new ImgElem(Res.baseCircle))
 
-    // Top set of images
+    // Top
+    private val topCBProp = new StringProperty(this, Prop.topCBPropName, Res.topSquare.name)
+    private val topCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.topCPPropName, Color.White)
     val topSet: Set[ImgElem] =
         Set(new ImgElem(Res.topSquare),
             new ImgElem(Res.topCircle))
 
-    // Bottom set of images
+    // Bottom
+    private val bottomCBProp = new StringProperty(this, Prop.bottomCBPropName, Res.bottomSquare.name)
+    private val bottomCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.bottomCPPropName, Color.White)
     val bottomSet: Set[ImgElem] =
         Set(new ImgElem(Res.bottomSquare),
             new ImgElem(Res.bottomCircle))
@@ -61,16 +62,16 @@ object App extends JFXApp {
     topSet.find(img => img.name == Res.topSquare.name).get.visible(true)
     bottomSet.find(img => img.name == Res.bottomSquare.name).get.visible(true)
 
-    // Set the change listener for each set
+    // Set combo box change listeners
     imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
         x._3._1.find(img => img.name == oldValue).get.visible(false)
         x._3._1.find(img => img.name == newValue).get.visible(true)
     })
 
+    // Set color picker change listeners
     imgList.foreach(x => x._3._3.onChange { (_, _, newValue) =>
         x._3._1.foreach(img => img.changeColor(newValue))
     })
-
 
     /**
       * Application stage. All user interface elements are contained
@@ -262,7 +263,7 @@ object App extends JFXApp {
                 },
                 new Button(Prop.quitButton) {
                     prefWidth = Prop.buttonWidth
-                    onAction = (e: ActionEvent) => {
+                    onAction = (_: ActionEvent) => {
                         System.exit(0)
                     }
                 }
