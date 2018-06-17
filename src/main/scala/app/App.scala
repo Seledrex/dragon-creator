@@ -27,7 +27,7 @@ import scalafx.stage.FileChooser
   */
 object App extends JFXApp {
 
-    // Properties
+    // Drag mode
     private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
 
     // Base
@@ -58,9 +58,7 @@ object App extends JFXApp {
         (Prop.topLabel, Seq(Res.topSquare.name, Res.topCircle.name), (topSet, topCBProp, topCPProp)))
 
     // Set initial visibility
-    baseSet.find(img => img.name == Res.baseSquare.name).get.visible(true)
-    topSet.find(img => img.name == Res.topSquare.name).get.visible(true)
-    bottomSet.find(img => img.name == Res.bottomSquare.name).get.visible(true)
+    imgList.foreach(x => x._3._1.find(img => img.name == x._3._2.get).get.visible(true))
 
     // Set combo box change listeners
     imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
@@ -81,7 +79,7 @@ object App extends JFXApp {
 
         // Set parameters
         title = Prop.title
-        resizable = false
+        resizable = true
 
         // Create a pane that holds multiple panels
         val panelsPane: Pane = new Pane() {
@@ -124,7 +122,7 @@ object App extends JFXApp {
       */
     private def createOptionsPanel(): Node = {
         new VBox(Prop.padding) {
-            children = imgList.reverse.map(x => createElementControl(x._1, x._2, x._3))
+            children = imgList.reverse.map(x => createElementControl(x._1, x._2, (x._3._2, x._3._3)))
             style = Styles.panelStyle
         }
     }
@@ -135,27 +133,27 @@ object App extends JFXApp {
       *
       * @param label Text to show on label.
       * @param options Options to provide in Combo Box.
-      * @param x Property listener and set tuple.
+      * @param props Property listeners.
       * @return Node containing Label and Combo Box.
       */
-    private def createElementControl(label: String, options: Seq[String], x: (Set[ImgElem], StringProperty, ObjectProperty[javafx.scene.paint.Color])): Node = {
+    private def createElementControl(label: String, options: Seq[String], props: (StringProperty, ObjectProperty[javafx.scene.paint.Color])): Node = {
 
         // Create combo box
         val cb: ComboBox[String] = new ComboBox(options) {
-            value = options.head
+            value = props._1.get
             prefWidth = Prop.pickerWidth
         }
 
         // Create color picker
-        val cp: ColorPicker = new ColorPicker(Color.White) {
+        val cp: ColorPicker = new ColorPicker(props._2.value) {
             prefWidth = Prop.pickerWidth
         }
 
         // Bind combo box property to value
-        x._2 <==> cb.value
+        props._1 <==> cb.value
 
         // Bind color picker property to value
-        x._3 <==> cp.value
+        props._2 <==> cp.value
 
         // Organize vertically
         new VBox(Prop.padding) {
