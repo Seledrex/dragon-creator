@@ -1,6 +1,6 @@
 package app
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{File, PrintWriter, StringWriter}
 import javax.imageio.ImageIO
 import org.apache.commons.io.FilenameUtils
 import res.{Prop, Res, Styles}
@@ -29,9 +29,12 @@ object App extends JFXApp {
 
     // Properties
     private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
-    private val baseProp = new StringProperty(this, Prop.basePropName, Res.baseSquare.name)
-    private val topProp = new StringProperty(this, Prop.topPropName, Res.topSquare.name)
-    private val bottomProp = new StringProperty(this, Prop.bottomPropName, Res.bottomSquare.name)
+    private val baseCBProp = new StringProperty(this, Prop.baseCBPropName, Res.baseSquare.name)
+    private val baseCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.baseCPPropName, Color.White)
+    private val topCBProp = new StringProperty(this, Prop.topCBPropName, Res.topSquare.name)
+    private val topCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.topCPPropName, Color.White)
+    private val bottomCBProp = new StringProperty(this, Prop.bottomCBPropName, Res.bottomSquare.name)
+    private val bottomCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.bottomCPPropName, Color.White)
 
     val baseSet: Set[ImgElem] =
         Set(new ImgElem(Res.baseSquare),
@@ -48,10 +51,10 @@ object App extends JFXApp {
             new ImgElem(Res.bottomCircle))
 
     // Put all sets into a list
-    val imgList: List[(String, Seq[String], (StringProperty, Set[ImgElem]))] = List(
-        (Prop.bottomLabel, Seq(Res.bottomSquare.name, Res.bottomCircle.name), (bottomProp, bottomSet)),
-        (Prop.baseLabel, Seq(Res.baseSquare.name, Res.baseCircle.name), (baseProp, baseSet)),
-        (Prop.topLabel, Seq(Res.topSquare.name, Res.topCircle.name), (topProp, topSet)))
+    val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[javafx.scene.paint.Color]))] = List(
+        (Prop.bottomLabel, Seq(Res.bottomSquare.name, Res.bottomCircle.name), (bottomSet, bottomCBProp, bottomCPProp)),
+        (Prop.baseLabel, Seq(Res.baseSquare.name, Res.baseCircle.name), (baseSet, baseCBProp, baseCPProp)),
+        (Prop.topLabel, Seq(Res.topSquare.name, Res.topCircle.name), (topSet, topCBProp, topCPProp)))
 
     // Set initial visibility
     baseSet.find(img => img.name == Res.baseSquare.name).get.visible(true)
@@ -59,10 +62,15 @@ object App extends JFXApp {
     bottomSet.find(img => img.name == Res.bottomSquare.name).get.visible(true)
 
     // Set the change listener for each set
-    imgList.foreach(x => x._3._1.onChange { (_, oldValue, newValue) =>
-        x._3._2.find(img => img.name == oldValue).get.visible(false)
-        x._3._2.find(img => img.name == newValue).get.visible(true)
+    imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
+        x._3._1.find(img => img.name == oldValue).get.visible(false)
+        x._3._1.find(img => img.name == newValue).get.visible(true)
     })
+
+    imgList.foreach(x => x._3._3.onChange { (_, _, newValue) =>
+        x._3._1.foreach(img => img.changeColor(newValue))
+    })
+
 
     /**
       * Application stage. All user interface elements are contained
@@ -129,7 +137,7 @@ object App extends JFXApp {
       * @param x Property listener and set tuple.
       * @return Node containing Label and Combo Box.
       */
-    private def createElementControl(label: String, options: Seq[String], x: (StringProperty, Set[ImgElem])): Node = {
+    private def createElementControl(label: String, options: Seq[String], x: (Set[ImgElem], StringProperty, ObjectProperty[javafx.scene.paint.Color])): Node = {
 
         // Create combo box
         val cb: ComboBox[String] = new ComboBox(options) {
@@ -143,12 +151,10 @@ object App extends JFXApp {
         }
 
         // Bind combo box property to value
-        x._1 <== cb.value
+        x._2 <==> cb.value
 
-        // Set event handler for changing colors
-        cp.onAction = (e: ActionEvent) => {
-            x._2.foreach(img => img.changeColor(cp.getValue))
-        }
+        // Bind color picker property to value
+        x._3 <==> cp.value
 
         // Organize vertically
         new VBox(Prop.padding) {
@@ -168,7 +174,7 @@ object App extends JFXApp {
       */
     private def createImagePanel(): Node = {
         new Pane() {
-            children = imgList.map(x => x._3._2).flatMap(set => set.toSeq).map(img => img.create)
+            children = imgList.map(x => x._3._1).flatMap(set => set.toSeq).map(img => img.create)
             alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
         }
@@ -205,15 +211,20 @@ object App extends JFXApp {
                         }
 
                         // Prompt user to choose file
-                        val file = chooser.showSaveDialog(stage)
+                        var file = chooser.showSaveDialog(stage)
 
                         // Check if a file is chosen
                         if (file != null) {
 
+                            // Ensure file extension
+                            if (FilenameUtils.getExtension(file.getAbsolutePath) == "") {
+                                file = new File(file.getAbsolutePath + ".png")
+                            }
+
                             // Group together visible elements and make copies
                             val group: Group = new Group() {
                                 children = imgList
-                                    .map(x => x._3._2)
+                                    .map(x => x._3._1)
                                     .flatMap(set => set.toSeq)
                                     .filter(img => img.isVisible)
                                     .map(img => (img.resource, img.color))

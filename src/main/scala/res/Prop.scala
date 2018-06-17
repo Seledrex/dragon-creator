@@ -16,9 +16,12 @@ object Prop {
 
     // Property names
     final val dragModePropName = "dragModeProp"
-    final val basePropName = "baseProp"
-    final val topPropName = "topProp"
-    final val bottomPropName = "bottomProp"
+    final val baseCBPropName = "baseProp"
+    final val baseCPPropName = "baseCPProp"
+    final val topCBPropName = "topCBProp"
+    final val topCPPropName = "topCPProp"
+    final val bottomCBPropName = "bottomCBProp"
+    final val bottomCPPropName = "bottomCPProp"
 
     // Check mark label
     final val dragModeCheckBoxName = "Drag mode"
