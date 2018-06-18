@@ -1,5 +1,9 @@
 package app
 
+//======================================================================================================================
+// Imports
+//======================================================================================================================
+
 import java.io.{File, PrintWriter, StringWriter}
 import javax.imageio.ImageIO
 import org.apache.commons.io.FilenameUtils
@@ -21,12 +25,19 @@ import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
 import scalafx.stage.FileChooser
 import scala.io.Source
 
+//======================================================================================================================
+// App
+//======================================================================================================================
+
 /**
   * Dragon Creator ScalaFX application.
-  *
   * @author Seledrex, Sanuthem
   */
 object App extends JFXApp {
+
+    //==================================================================================================================
+    // Application Variables
+    //==================================================================================================================
 
     // Save file
     private var saveFile: File = _
@@ -67,6 +78,10 @@ object App extends JFXApp {
     // Set initial visibility
     imgList.foreach(x => x._3._1.find(img => img.name == x._3._2.get).get.visible(true))
 
+    //==================================================================================================================
+    // Property Listeners
+    //==================================================================================================================
+
     // Set combo box change listeners
     imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
         x._3._1.find(img => img.name == oldValue).get.visible(false)
@@ -79,6 +94,10 @@ object App extends JFXApp {
         x._3._1.foreach(img => img.changeColor(newValue))
         madeChanges = true
     })
+
+    //==================================================================================================================
+    // Stage
+    //==================================================================================================================
 
     /**
       * Application stage. All user interface elements are contained
@@ -123,61 +142,65 @@ object App extends JFXApp {
         }
     }
 
+    //==================================================================================================================
+    // Panels
+    //==================================================================================================================
+
     /**
       * Creates the options panel that houses the controls for
       * designing the dragon.
-      *
       * @return Node.
       */
     private def createOptionsPanel(): Node = {
+
+        /**
+          * Creates a control for a single layer.
+          * @param label Layer name.
+          * @param options Layer options.
+          * @param props Property listeners.
+          * @return
+          */
+        def createLayerControl(label: String,
+                                 options: Seq[String],
+                                 props: (StringProperty, ObjectProperty[javafx.scene.paint.Color])): Node = {
+
+            // Create combo box
+            val cb: ComboBox[String] = new ComboBox(options) {
+                value = props._1.get
+                prefWidth = Prop.pickerWidth
+            }
+
+            // Create color picker
+            val cp: ColorPicker = new ColorPicker(props._2.value) {
+                prefWidth = Prop.pickerWidth
+            }
+
+            // Bind combo box property to value
+            props._1 <==> cb.value
+
+            // Bind color picker property to value
+            props._2 <==> cp.value
+
+            // Organize vertically
+            new VBox(Prop.padding) {
+                children = Seq(
+                    new Label(label),
+                    cb,
+                    cp
+                )
+            }
+        }
+
+        // Add all layer controls to panel
         new VBox(Prop.padding) {
-            children = imgList.reverse.map(x => createElementControl(x._1, x._2, (x._3._2, x._3._3)))
+            children = imgList.reverse.map(x => createLayerControl(x._1, x._2, (x._3._2, x._3._3)))
             style = Styles.panelStyle
-        }
-    }
-
-    /**
-      * Used to quickly create Combox Boxes with labels, options,
-      * property listener, and color picker.
-      *
-      * @param label Text to show on label.
-      * @param options Options to provide in Combo Box.
-      * @param props Property listeners.
-      * @return Node containing Label and Combo Box.
-      */
-    private def createElementControl(label: String, options: Seq[String], props: (StringProperty, ObjectProperty[javafx.scene.paint.Color])): Node = {
-
-        // Create combo box
-        val cb: ComboBox[String] = new ComboBox(options) {
-            value = props._1.get
-            prefWidth = Prop.pickerWidth
-        }
-
-        // Create color picker
-        val cp: ColorPicker = new ColorPicker(props._2.value) {
-            prefWidth = Prop.pickerWidth
-        }
-
-        // Bind combo box property to value
-        props._1 <==> cb.value
-
-        // Bind color picker property to value
-        props._2 <==> cp.value
-
-        // Organize vertically
-        new VBox(Prop.padding) {
-            children = Seq(
-                new Label(label),
-                cb,
-                cp
-            )
         }
     }
 
     /**
       * Creates the image panel that displays the dragon being made
       * to the user.
-      *
       * @return Node.
       */
     private def createImagePanel(): Node = {
@@ -190,7 +213,6 @@ object App extends JFXApp {
 
     /**
       * Creates the file panel which gives users basic controls.
-      *
       * @return Node.
       */
     private def createFilePanel(): Node = {
@@ -223,73 +245,13 @@ object App extends JFXApp {
                 new Button(Prop.saveImageButton) {
                     prefWidth = Prop.buttonWidth
                     onAction = (_: ActionEvent) => {
-                        // Create file chooser
-                        val chooser = new FileChooser() {
-                            title = Prop.fileChooserTitle
-                            extensionFilters.addAll(
-                                new FileChooser.ExtensionFilter("PNG", "*.png"))
-                        }
-
-                        // Prompt user to choose file
-                        var file = chooser.showSaveDialog(stage)
-
-                        // Check if a file is chosen
-                        if (file != null) {
-
-                            // Ensure file extension
-                            if (FilenameUtils.getExtension(file.getAbsolutePath) == "") {
-                                file = new File(file.getAbsolutePath + ".png")
-                            }
-
-                            // Group together visible elements and make copies
-                            val group: Group = new Group() {
-                                children = imgList
-                                    .map(x => x._3._1)
-                                    .flatMap(set => set.toSeq)
-                                    .filter(img => img.isVisible)
-                                    .map(img => (img.resource, img.color))
-                                    .map(x => {
-                                        val copy = new ImgElem(x._1)
-                                        copy.visible(true)
-                                        copy.changeColor(x._2)
-                                        copy })
-                                    .flatMap(x => Seq(x.fillImg, x.borderImg))
-                                blendMode = BlendMode.SrcAtop
-                            }
-
-                            // Create snapshot of group
-                            val wr = new WritableImage(Prop.imgRes._1.toInt, Prop.imgRes._2.toInt)
-                            val out = group.snapshot(new SnapshotParameters(), wr)
-
-                            // Attempt to save image to disk
-                            try {
-                                ImageIO.write(
-                                    SwingFXUtils.fromFXImage(out, null),
-                                    FilenameUtils.getExtension(file.getAbsolutePath),
-                                    file)
-                                new Alert(AlertType.Information) {
-                                    initOwner(stage)
-                                    title = Prop.alertSuccess
-                                    headerText = "Successfully saved image."
-                                    contentText = "The image was saved successfully to " + file.getAbsolutePath
-                                }.showAndWait()
-                            } catch {
-                                case e: Exception => createExceptionDialog(e,
-                                    "Error saving image.", e.getMessage).showAndWait()
-                            }
-                        }
+                        saveImage()
                     }
                 },
                 new Button(Prop.quitButton) {
                     prefWidth = Prop.buttonWidth
                     onAction = (_: ActionEvent) => {
-                        if (madeChanges) {
-                            createSaveChangesDialog().showAndWait() match {
-                                case Some(ButtonType.Yes) => saveRawrFile(false);  System.exit(0)
-                                case Some(ButtonType.No) =>  System.exit(0)
-                                case _ =>
-                            }
-                        } else System.exit(0)
+                        quit()
                     }
                 }
             )
@@ -297,7 +259,19 @@ object App extends JFXApp {
         }
     }
 
+    //==================================================================================================================
+    // File Operations
+    //==================================================================================================================
+
+    /**
+      * Loads a new rawr file from disk or reinitialized the program.
+      * @param init True for reinitialization.
+      */
     private def loadRawrFile(init: Boolean): Unit = {
+
+        /**
+          * Resets the images to default.
+          */
         def reset(): Unit = {
             saveFile = null
             imgList.foreach(x => {
@@ -307,32 +281,49 @@ object App extends JFXApp {
             madeChanges = false
         }
 
+        /**
+          * Loads a rawr file from disk.
+          */
         def load(): Unit = {
 
+            /**
+              * Creates a bad format dialog.
+              * @return Alert.
+              */
             def createBadFormatDialog(): Alert = createExceptionDialog(
                 new Exception("Incorrect file format."),
                 "Could not load " + saveFile.getName + ".",
                 "Incorrect file format.")
 
+            // Create file chooser that only accepts rawr files
             val chooser = new FileChooser() {
                 title = Prop.fileChooserTitle
                 extensionFilters.addAll(
                     new FileChooser.ExtensionFilter("RAWR", "*.rawr"))
             }
 
+            // Prompt user to choose file
             saveFile = chooser.showOpenDialog(stage)
 
+            // Check if file was chosen
             if (saveFile != null) {
+
                 // Ensure file extension
                 if (FilenameUtils.getExtension(saveFile.getAbsolutePath) != "rawr") {
                     createBadFormatDialog().showAndWait()
                     return
                 }
 
+                // File format regex
                 val regex = "(^[A-Za-z]+)=([A-Za-z]+);(#[0-9a-f]{6})".r
+
+                // Parse each line of the file
                 for (line <- Source.fromFile(saveFile).getLines()) {
+
+                    // Check for matches
                     regex.findFirstMatchIn(line) match {
                         case Some(m) =>
+                            // Set the corresponding layer
                             imgList.find(x => x._1 == m.subgroups.head) match {
                                 case Some(layer) =>
                                     layer._3._2.value = m.subgroups(1)
@@ -349,10 +340,15 @@ object App extends JFXApp {
             }
         }
 
+        /**
+          * Returns either reset or load.
+          * @param init True for reinitialization.
+          */
         def resetElseLoad(init: Boolean): Unit = if (init) reset() else load()
 
+        // Check if changes were made to the current file
         if (madeChanges) {
-                createSaveChangesDialog().showAndWait() match {
+            createSaveChangesDialog().showAndWait() match {
                 case Some(ButtonType.Yes) => saveRawrFile(false); resetElseLoad(init)
                 case Some(ButtonType.No) => resetElseLoad(init)
                 case _ =>
@@ -360,7 +356,22 @@ object App extends JFXApp {
         } else resetElseLoad(init)
     }
 
+    /**
+      * Saves the current rawr file to disk.
+      * @param saveAs True if doing Save As operation.
+      */
     private def saveRawrFile(saveAs: Boolean): Unit = {
+
+        /**
+          * Converts a ScalaFX Color to its hex code.
+          * @param color Color to convert.
+          * @return Hex code string.
+          */
+        def colorToRGBCode(color: Color): String = {
+            "#%02x%02x%02x" format ((color.red * 255).toInt, (color.green * 255).toInt, (color.blue * 255).toInt)
+        }
+
+        // Open file chooser if necessary
         if (saveFile == null || saveAs) {
             val chooser = new FileChooser() {
                 title = Prop.fileChooserTitle
@@ -371,6 +382,7 @@ object App extends JFXApp {
             saveFile = chooser.showSaveDialog(stage)
         }
 
+        // Check if file is chosen
         if (saveFile != null) {
 
             // Ensure file extension
@@ -380,6 +392,7 @@ object App extends JFXApp {
 
             var printWriter: PrintWriter = null
 
+            // Attempt to write file to disk
             try {
                 printWriter = new PrintWriter(saveFile)
                 imgList.foreach(x => {
@@ -400,43 +413,90 @@ object App extends JFXApp {
         }
     }
 
-    def colorToRGBCode(color: Color): String = {
-        "#%02x%02x%02x" format ((color.red * 255).toInt, (color.green * 255).toInt, (color.blue * 255).toInt)
-    }
-
     /**
-      * Makes node draggable within a pane.
-      *
-      * @param node Node to make draggable.
-      * @return Draggable node.
+      * Saves what is currently being displayed in the GUI to disk as a
+      * PNG image.
       */
-    private def makeDraggable(node: Node): Node = {
+    private def saveImage(): Unit = {
 
-        // Create context
-        val dragContext = new DragContext()
+        // Create file chooser
+        val chooser = new FileChooser() {
+            title = Prop.fileChooserTitle
+            extensionFilters.addAll(
+                new FileChooser.ExtensionFilter("PNG", "*.png"))
+        }
 
-        // Put node in group the filter mouse events
-        new Group(node) {
-            filterEvent(MouseEvent.Any) {
-                me: MouseEvent =>
-                    if (dragModeProp()) {
-                        me.eventType match {
-                            case MouseEvent.MousePressed =>
-                                dragContext.mouseAnchorX = me.x
-                                dragContext.mouseAnchorY = me.y
-                                dragContext.initialTranslateX = node.translateX()
-                                dragContext.initialTranslateY = node.translateY()
-                            case MouseEvent.MouseDragged =>
-                                node.translateX = dragContext.initialTranslateX + me.x - dragContext.mouseAnchorX
-                                node.translateY = dragContext.initialTranslateY + me.y - dragContext.mouseAnchorY
-                            case _ =>
-                        }
-                        me.consume()
-                    }
+        // Prompt user to choose file
+        var file = chooser.showSaveDialog(stage)
+
+        // Check if a file is chosen
+        if (file != null) {
+
+            // Ensure file extension
+            if (FilenameUtils.getExtension(file.getAbsolutePath) == "") {
+                file = new File(file.getAbsolutePath + ".png")
+            }
+
+            // Group together visible elements and make copies
+            val group: Group = new Group() {
+                children = imgList
+                    .map(x => x._3._1)
+                    .flatMap(set => set.toSeq)
+                    .filter(img => img.isVisible)
+                    .map(img => (img.resource, img.color))
+                    .map(x => {
+                        val copy = new ImgElem(x._1)
+                        copy.visible(true)
+                        copy.changeColor(x._2)
+                        copy })
+                    .flatMap(x => Seq(x.fillImg, x.borderImg))
+                blendMode = BlendMode.SrcAtop
+            }
+
+            // Create snapshot of group
+            val wr = new WritableImage(Prop.imgRes._1.toInt, Prop.imgRes._2.toInt)
+            val out = group.snapshot(new SnapshotParameters(), wr)
+
+            // Attempt to save image to disk
+            try {
+                ImageIO.write(
+                    SwingFXUtils.fromFXImage(out, null),
+                    FilenameUtils.getExtension(file.getAbsolutePath),
+                    file)
+                new Alert(AlertType.Information) {
+                    initOwner(stage)
+                    title = Prop.alertSuccess
+                    headerText = "Successfully saved image."
+                    contentText = "The image was saved successfully to " + file.getAbsolutePath
+                }.showAndWait()
+            } catch {
+                case e: Exception => createExceptionDialog(e,
+                    "Error saving image.", e.getMessage).showAndWait()
             }
         }
     }
 
+    /**
+      * Quits the program and asks the user to save changes.
+      */
+    private def quit(): Unit = {
+        if (madeChanges) {
+            createSaveChangesDialog().showAndWait() match {
+                case Some(ButtonType.Yes) => saveRawrFile(false);  System.exit(0)
+                case Some(ButtonType.No) =>  System.exit(0)
+                case _ =>
+            }
+        } else System.exit(0)
+    }
+
+    //==================================================================================================================
+    // Dialogs
+    //==================================================================================================================
+
+    /**
+      * Creates a new save changes dialog.
+      * @return Alert.
+      */
     private def createSaveChangesDialog(): Alert = {
         new Alert(AlertType.Confirmation) {
             initOwner(stage)
@@ -450,7 +510,6 @@ object App extends JFXApp {
 
     /**
       * Creates a new exception dialog.
-      *
       * @param e Exception to create dialog for.
       * @param header Header of dialog.
       * @param content Content of dialog.
@@ -488,6 +547,42 @@ object App extends JFXApp {
             headerText = header
             contentText = content
             dialogPane().expandableContent = expContent
+        }
+    }
+
+    //==================================================================================================================
+    // Drag Mode
+    //==================================================================================================================
+
+    /**
+      * Makes node draggable within a pane.
+      * @param node Node to make draggable.
+      * @return Draggable node.
+      */
+    private def makeDraggable(node: Node): Node = {
+
+        // Create context
+        val dragContext = new DragContext()
+
+        // Put node in group the filter mouse events
+        new Group(node) {
+            filterEvent(MouseEvent.Any) {
+                me: MouseEvent =>
+                    if (dragModeProp()) {
+                        me.eventType match {
+                            case MouseEvent.MousePressed =>
+                                dragContext.mouseAnchorX = me.x
+                                dragContext.mouseAnchorY = me.y
+                                dragContext.initialTranslateX = node.translateX()
+                                dragContext.initialTranslateY = node.translateY()
+                            case MouseEvent.MouseDragged =>
+                                node.translateX = dragContext.initialTranslateX + me.x - dragContext.mouseAnchorX
+                                node.translateY = dragContext.initialTranslateY + me.y - dragContext.mouseAnchorY
+                            case _ =>
+                        }
+                        me.consume()
+                    }
+            }
         }
     }
 
