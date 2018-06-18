@@ -40,6 +40,7 @@ object Prop {
     final val quitButton = "Quit"
 
     // Alerts
+    final val alertConfirm = "Confirm New File"
     final val alertSuccess = "Success"
     final val alertError = "Error"
 

@@ -19,13 +19,20 @@ import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
 import scalafx.stage.FileChooser
+import scala.io.Source
 
 /**
   * Dragon Creator ScalaFX application.
   *
-  * @author Eric Auster
+  * @author Seledrex, Sanuthem
   */
 object App extends JFXApp {
+
+    // Save file
+    private var saveFile: File = _
+
+    // Keeps track if user made changes
+    private var madeChanges = false
 
     // Drag mode
     private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
@@ -64,11 +71,13 @@ object App extends JFXApp {
     imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
         x._3._1.find(img => img.name == oldValue).get.visible(false)
         x._3._1.find(img => img.name == newValue).get.visible(true)
+        madeChanges = true
     })
 
     // Set color picker change listeners
     imgList.foreach(x => x._3._3.onChange { (_, _, newValue) =>
         x._3._1.foreach(img => img.changeColor(newValue))
+        madeChanges = true
     })
 
     /**
@@ -189,15 +198,27 @@ object App extends JFXApp {
             children = Seq(
                 new Button(Prop.newButton) {
                     prefWidth = Prop.buttonWidth
+                    onAction = (_: ActionEvent) => {
+                        loadRawrFile(true)
+                    }
                 },
                 new Button(Prop.openButton) {
                     prefWidth = Prop.buttonWidth
+                    onAction = (_: ActionEvent) => {
+                        loadRawrFile(false)
+                    }
                 },
                 new Button(Prop.saveButton) {
                     prefWidth = Prop.buttonWidth
+                    onAction = (_: ActionEvent) => {
+                        saveRawrFile(false)
+                    }
                 },
                 new Button(Prop.saveAsButton) {
                     prefWidth = Prop.buttonWidth
+                    onAction = (_: ActionEvent) => {
+                        saveRawrFile(true)
+                    }
                 },
                 new Button(Prop.saveImageButton) {
                     prefWidth = Prop.buttonWidth
@@ -262,12 +283,125 @@ object App extends JFXApp {
                 new Button(Prop.quitButton) {
                     prefWidth = Prop.buttonWidth
                     onAction = (_: ActionEvent) => {
-                        System.exit(0)
+                        if (madeChanges) {
+                            createSaveChangesDialog().showAndWait() match {
+                                case Some(ButtonType.Yes) => saveRawrFile(false);  System.exit(0)
+                                case Some(ButtonType.No) =>  System.exit(0)
+                                case _ =>
+                            }
+                        } else System.exit(0)
                     }
                 }
             )
             style = Styles.panelStyle
         }
+    }
+
+    private def loadRawrFile(init: Boolean): Unit = {
+        def reset(): Unit = {
+            saveFile = null
+            imgList.foreach(x => {
+                x._3._2.value = x._2.head
+                x._3._3.value = Color.White
+            })
+            madeChanges = false
+        }
+
+        def load(): Unit = {
+
+            def createBadFormatDialog(): Alert = createExceptionDialog(
+                new Exception("Incorrect file format."),
+                "Could not load " + saveFile.getName + ".",
+                "Incorrect file format.")
+
+            val chooser = new FileChooser() {
+                title = Prop.fileChooserTitle
+                extensionFilters.addAll(
+                    new FileChooser.ExtensionFilter("RAWR", "*.rawr"))
+            }
+
+            saveFile = chooser.showOpenDialog(stage)
+
+            if (saveFile != null) {
+                // Ensure file extension
+                if (FilenameUtils.getExtension(saveFile.getAbsolutePath) != "rawr") {
+                    createBadFormatDialog().showAndWait()
+                    return
+                }
+
+                val regex = "(^[A-Za-z]+)=([A-Za-z]+);(#[0-9a-f]{6})".r
+                for (line <- Source.fromFile(saveFile).getLines()) {
+                    regex.findFirstMatchIn(line) match {
+                        case Some(m) =>
+                            imgList.find(x => x._1 == m.subgroups.head) match {
+                                case Some(layer) =>
+                                    layer._3._2.value = m.subgroups(1)
+                                    layer._3._3.value = Color.web(m.subgroups(2))
+                                case None =>
+                                    createBadFormatDialog().showAndWait(); return
+                            }
+                        case None =>
+                            createBadFormatDialog().showAndWait(); return
+                    }
+                }
+
+                madeChanges = false
+            }
+        }
+
+        def resetElseLoad(init: Boolean): Unit = if (init) reset() else load()
+
+        if (madeChanges) {
+                createSaveChangesDialog().showAndWait() match {
+                case Some(ButtonType.Yes) => saveRawrFile(false); resetElseLoad(init)
+                case Some(ButtonType.No) => resetElseLoad(init)
+                case _ =>
+            }
+        } else resetElseLoad(init)
+    }
+
+    private def saveRawrFile(saveAs: Boolean): Unit = {
+        if (saveFile == null || saveAs) {
+            val chooser = new FileChooser() {
+                title = Prop.fileChooserTitle
+                extensionFilters.addAll(
+                    new FileChooser.ExtensionFilter("RAWR", "*.rawr"))
+            }
+
+            saveFile = chooser.showSaveDialog(stage)
+        }
+
+        if (saveFile != null) {
+
+            // Ensure file extension
+            if (FilenameUtils.getExtension(saveFile.getAbsolutePath) == "") {
+                saveFile = new File(saveFile.getAbsolutePath + ".rawr")
+            }
+
+            var printWriter: PrintWriter = null
+
+            try {
+                printWriter = new PrintWriter(saveFile)
+                imgList.foreach(x => {
+                    printWriter.write(x._1 + "=" + x._3._2.value + ";" + colorToRGBCode(x._3._3.value) + "\n")
+                })
+                new Alert(AlertType.Information) {
+                    initOwner(stage)
+                    title = Prop.alertSuccess
+                    headerText = "Successfully saved file."
+                    contentText = "The file was saved successfully to " + saveFile.getAbsolutePath
+                }.showAndWait()
+                madeChanges = false
+            } catch {
+                case e: Exception => createExceptionDialog(e, "Could not save file.", e.getMessage)
+            } finally {
+                printWriter.close()
+            }
+        }
+    }
+
+    def colorToRGBCode(color: Color): String = {
+        "#%02x%02x%02x" format ((color.red * 255).toInt, (color.green * 255).toInt, (color.blue * 255).toInt)
     }
 
     /**
@@ -300,6 +434,17 @@ object App extends JFXApp {
                         me.consume()
                     }
             }
+        }
+    }
+
+    private def createSaveChangesDialog(): Alert = {
+        new Alert(AlertType.Confirmation) {
+            initOwner(stage)
+            title = Prop.alertConfirm
+            headerText = "Would you like to save changes to the current file?"
+            contentText = "You have made changes to " +
+                { if (saveFile == null) "an unsaved file" else saveFile.getName } + "."
+            buttonTypes = Seq(ButtonType.Yes, ButtonType.No, ButtonType.Cancel)
         }
     }
 
