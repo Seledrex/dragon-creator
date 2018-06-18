@@ -7,6 +7,12 @@ object Res {
 
     final class Resource(val name: String, val fill: String, val border: String)
 
+    final val baseDragon = new Resource(
+        "Dragon",
+        "base_dragon_fill.png",
+        "base_dragon_border.png"
+    )
+
     final val baseCircle = new Resource(
         "Circle",
         "base_circle_fill.png",

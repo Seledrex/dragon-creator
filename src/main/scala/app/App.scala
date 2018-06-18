@@ -49,10 +49,11 @@ object App extends JFXApp {
     private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
 
     // Base
-    private val baseCBProp = new StringProperty(this, Prop.baseCBPropName, Res.baseSquare.name)
+    private val baseCBProp = new StringProperty(this, Prop.baseCBPropName, Res.baseDragon.name)
     private val baseCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.baseCPPropName, Color.White)
     val baseSet: Set[ImgElem] =
-        Set(new ImgElem(Res.baseSquare),
+        Set(new ImgElem(Res.baseDragon),
+            new ImgElem(Res.baseSquare),
             new ImgElem(Res.baseCircle))
 
     // Top
@@ -70,10 +71,18 @@ object App extends JFXApp {
             new ImgElem(Res.bottomCircle))
 
     // Put all sets into a list
-    val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[javafx.scene.paint.Color]))] = List(
-        (Prop.bottomLabel, Seq(Res.bottomSquare.name, Res.bottomCircle.name), (bottomSet, bottomCBProp, bottomCPProp)),
-        (Prop.baseLabel, Seq(Res.baseSquare.name, Res.baseCircle.name), (baseSet, baseCBProp, baseCPProp)),
-        (Prop.topLabel, Seq(Res.topSquare.name, Res.topCircle.name), (topSet, topCBProp, topCPProp)))
+    val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[javafx.scene.paint.Color]))] =
+        List(
+            (Prop.bottomLabel,
+                Seq(Prop.noneOption, Res.bottomSquare.name, Res.bottomCircle.name),
+                (bottomSet, bottomCBProp, bottomCPProp)),
+            (Prop.baseLabel,
+                Seq(Res.baseDragon.name, Res.baseSquare.name, Res.baseCircle.name),
+                (baseSet, baseCBProp, baseCPProp)),
+            (Prop.topLabel,
+                Seq(Prop.noneOption, Res.topSquare.name, Res.topCircle.name),
+                (topSet, topCBProp, topCPProp)))
+
 
     // Set initial visibility
     imgList.foreach(x => x._3._1.find(img => img.name == x._3._2.get).get.visible(true))
@@ -84,8 +93,15 @@ object App extends JFXApp {
 
     // Set combo box change listeners
     imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
-        x._3._1.find(img => img.name == oldValue).get.visible(false)
-        x._3._1.find(img => img.name == newValue).get.visible(true)
+        if (newValue == Prop.noneOption) {
+            x._3._1.find(img => img.name == oldValue).get.visible(false)
+        } else if (oldValue == Prop.noneOption) {
+            x._3._1.find(img => img.name == newValue).get.visible(true)
+        } else {
+            x._3._1.find(img => img.name == oldValue).get.visible(false)
+            x._3._1.find(img => img.name == newValue).get.visible(true)
+        }
+
         madeChanges = true
     })
 

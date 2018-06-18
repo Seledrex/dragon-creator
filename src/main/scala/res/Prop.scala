@@ -47,4 +47,7 @@ object Prop {
     // File chooser
     final val fileChooserTitle = "Choose File"
 
+    // None option
+    final val noneOption = "None"
+
 }
