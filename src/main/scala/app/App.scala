@@ -45,7 +45,7 @@ object App extends JFXApp {
     // Keeps track if user made changes
     private var madeChanges = false
 
-    // Drag mode
+    // Properties
     private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
 
     // Base
@@ -131,27 +131,42 @@ object App extends JFXApp {
         val windowPanel: Node = new Pane() {
             margin = Insets(Prop.padding)
             children = new HBox(Prop.padding) {
-                children = Seq(filePanel, new HBox(Prop.padding) {
-                    val panelResetButton: Button = new Button("Reset Panels") {
-                        prefWidth = Prop.buttonWidth
-                        onAction = (_: ActionEvent) => {
-                            optionPanel.relocate(Prop.padding, 0)
-                            imagePanel.relocate(150, 0)
+                children = Seq(
+                    filePanel,
+                    new HBox(Prop.padding) {
+                        val panelResetButton: Button = new Button("Reset Panels") {
+                            prefWidth = Prop.buttonWidth
+                            onAction = (_: ActionEvent) => {
+                                optionPanel.relocate(Prop.padding, 0)
+                                imagePanel.relocate(150, 0)
+                            }
                         }
-                    }
 
-                    // Create a checkbox to toggle drag mode
-                    val dragModeCheckbox: CheckBox = new CheckBox(Prop.dragModeCheckBoxName) {
-                        selected = dragModeProp()
-                    }
+                        // Create a checkbox to toggle drag mode
+                        val dragModeCheckbox: CheckBox = new CheckBox(Prop.dragModeCheckBoxName) {
+                            selected = dragModeProp()
+                        }
 
-                    // Link the checkbox to the drag mode property
-                    dragModeProp <== dragModeCheckbox.selected
+                        // Link the checkbox to the drag mode property
+                        dragModeProp <== dragModeCheckbox.selected
 
-                    children = Seq(panelResetButton, dragModeCheckbox)
-                    alignment = Pos.CenterLeft
-                    style = Styles.panelStyle
-                })
+                        children = Seq(panelResetButton, dragModeCheckbox)
+                        alignment = Pos.CenterLeft
+                        style = Styles.panelStyle
+                    },
+                    new HBox(Prop.padding) {
+                        children = Seq(
+                            new Label("Unsaved File") {
+                                prefWidth = Prop.pickerWidth
+                                alignment = Pos.Center
+                            },
+                            new ProgressBar() {
+                                prefWidth = 377
+                                progress = 100
+                        })
+                        alignment = Pos.CenterLeft
+                        style = Styles.panelStyle
+                    })
             }
         }
 
