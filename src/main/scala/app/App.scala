@@ -83,7 +83,6 @@ object App extends JFXApp {
                 Seq(Prop.noneOption, Res.topSquare.name, Res.topCircle.name),
                 (topSet, topCBProp, topCPProp)))
 
-
     // Set initial visibility
     imgList.foreach(x => x._3._1.find(img => img.name == x._3._2.get).get.visible(true))
 
@@ -125,34 +124,51 @@ object App extends JFXApp {
         title = Prop.title
         resizable = true
 
+        val filePanel: Node = createFilePanel()
+        val optionPanel: Node = makeDraggable(createOptionsPanel())
+        val imagePanel: Node = makeDraggable(createImagePanel())
+
+        val windowPanel: Node = new Pane() {
+            margin = Insets(Prop.padding)
+            children = new HBox(Prop.padding) {
+                children = Seq(filePanel, new HBox(Prop.padding) {
+                    val panelResetButton: Button = new Button("Reset Panels") {
+                        prefWidth = Prop.buttonWidth
+                        onAction = (_: ActionEvent) => {
+                            optionPanel.relocate(Prop.padding, 0)
+                            imagePanel.relocate(150, 0)
+                        }
+                    }
+
+                    // Create a checkbox to toggle drag mode
+                    val dragModeCheckbox: CheckBox = new CheckBox(Prop.dragModeCheckBoxName) {
+                        selected = dragModeProp()
+                    }
+
+                    // Link the checkbox to the drag mode property
+                    dragModeProp <== dragModeCheckbox.selected
+
+                    children = Seq(panelResetButton, dragModeCheckbox)
+                    alignment = Pos.CenterLeft
+                    style = Styles.panelStyle
+                })
+            }
+        }
+
         // Create a pane that holds multiple panels
         val panelsPane: Pane = new Pane() {
-            val filePanel: Node = makeDraggable(createFilePanel())
-            val optionPanel: Node = makeDraggable(createOptionsPanel())
-            val imagePanel: Node = makeDraggable(createImagePanel())
+            optionPanel.relocate(Prop.padding, 0)
+            imagePanel.relocate(150, 0)
 
-            filePanel.relocate(Prop.padding, Prop.padding)
-            optionPanel.relocate(Prop.padding, 50)
-            imagePanel.relocate(150, 50)
-
-            children = Seq(imagePanel, optionPanel, filePanel)
+            children = Seq(imagePanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
-
-        // Create a checkbox to toggle drag mode
-        val dragModeCheckbox: CheckBox = new CheckBox(Prop.dragModeCheckBoxName) {
-            margin = Insets(Prop.padding)
-            selected = dragModeProp()
-        }
-
-        // Link the checkbox to the drag mode property
-        dragModeProp <== dragModeCheckbox.selected
 
         // Create scene containing all elements and proper resolution
         scene = new Scene(Prop.resolution._1, Prop.resolution._2) {
             root = new BorderPane() {
                 center = panelsPane
-                bottom = dragModeCheckbox
+                top = windowPanel
                 style = Styles.backgroundStyle
             }
         }
@@ -231,7 +247,7 @@ object App extends JFXApp {
       * Creates the file panel which gives users basic controls.
       * @return Node.
       */
-    private def createFilePanel(): Node = {
+    private def createFilePanel(): HBox = {
         new HBox(Prop.padding) {
             children = Seq(
                 new Button(Prop.newButton) {
