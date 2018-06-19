@@ -160,6 +160,7 @@ object App extends JFXApp {
                         // Create a checkbox to toggle drag mode
                         val dragModeCheckbox: CheckBox = new CheckBox(Prop.dragModeCheckBoxName) {
                             selected = dragModeProp()
+                            prefWidth = Prop.buttonWidth
                         }
 
                         // Link the checkbox to the drag mode property
