@@ -147,13 +147,8 @@ object App extends JFXApp {
 
     // Resolution change listener
     resProp.onChange { (_, _, newValue) => {
-        "([0-9]+)×([0-9]+)".r.findFirstMatchIn(newValue) match {
-            case Some(res) => imgList.foreach(x =>
-                x._3._1.foreach(img =>
-                    img.changeSize((res.subgroups.head.toDouble, res.subgroups(1).toDouble))))
-                backgroundImg.changeSize((res.subgroups.head.toDouble, res.subgroups(1).toDouble))
-            case None =>
-        }
+        imgList.foreach(x => x._3._1.foreach(img => img.changeSize(convertRes(newValue))))
+        backgroundImg.changeSize(convertRes(newValue))
     }}
 
     //==================================================================================================================
@@ -189,11 +184,7 @@ object App extends JFXApp {
                             }
                         }
 
-                        val resOptions: Seq[String] = Seq(
-                            (426, 240), (640, 360), (854, 480), (1024, 576),
-                            (1280, 720), (1600, 900), (1920, 1080)).map(x => x._1.toString + "×" + x._2.toString)
-
-                        val imgResComboBox: ComboBox[String] = new ComboBox(resOptions) {
+                        val imgResComboBox: ComboBox[String] = new ComboBox(Prop.resOptions) {
                             value = Prop.imgResStr
                             prefWidth = 105
                         }
@@ -553,6 +544,18 @@ object App extends JFXApp {
       */
     private def saveImage(): Unit = {
 
+        val resChoiceDialog = new ChoiceDialog(defaultChoice = Prop.imgResStr, choices = Prop.resOptions) {
+            initOwner(stage)
+            title = "Select Resolution"
+            headerText = "Select the resolution to output to."
+            contentText = "Resolution:"
+        }
+
+        val resChoice = resChoiceDialog.showAndWait() match {
+            case Some(choice) => choice
+            case None => return
+        }
+
         // Create file chooser
         val chooser = new FileChooser() {
             title = Prop.fileChooserTitle
@@ -734,5 +737,23 @@ object App extends JFXApp {
         var mouseAnchorY: Double = 0d
         var initialTranslateX: Double = 0d
         var initialTranslateY: Double = 0d
+    }
+
+    //==================================================================================================================
+    // Miscellaneous
+    //==================================================================================================================
+
+    /**
+      * Converts an image resolution string into a tuple of doubles. If the passed
+      * in string does not have the correct format, the function will return the
+      * default image resolution tuple.
+      * @param resStr String to convert from.
+      * @return Tuple of doubles.
+      */
+    private def convertRes(resStr: String): (Double, Double) = {
+        "([0-9]+)×([0-9]+)".r.findFirstMatchIn(resStr) match {
+            case Some(res) => (res.subgroups.head.toDouble, res.subgroups(1).toDouble)
+            case None => Prop.imgRes
+        }
     }
 }
