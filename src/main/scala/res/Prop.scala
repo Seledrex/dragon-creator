@@ -8,25 +8,12 @@ object Prop {
     final val title: String = "Dragon Creator"
     final val resolution: (Double, Double) = (1280, 720)
     final val imgRes: (Double, Double) = (resolution._1 / 1.25, resolution._2 / 1.25)
+    final val imgResStr = "1024×576"
     final val padding: Int = 5
 
     // Widths
     final val pickerWidth: Int = 125
     final val buttonWidth: Int = 85
-
-    // Property names
-    final val madeChangesPropName = "madeChangesProp"
-    final val dragModePropName = "dragModeProp"
-    final val statusPropName = "statusProp"
-    final val progressPropName = "progressProp"
-    final val loadingPropName = "loadingProp"
-
-    final val baseCBPropName = "baseProp"
-    final val baseCPPropName = "baseCPProp"
-    final val topCBPropName = "topCBProp"
-    final val topCPPropName = "topCPProp"
-    final val bottomCBPropName = "bottomCBProp"
-    final val bottomCPPropName = "bottomCPProp"
 
     // Check mark label
     final val dragModeCheckBoxName = "Drag mode"
@@ -35,6 +22,7 @@ object Prop {
     final val baseLabel = "Base"
     final val topLabel = "Top"
     final val bottomLabel = "Bottom"
+    final val statusLabel = "Untitled"
 
     // Button names
     final val newButton = "New"
@@ -43,6 +31,7 @@ object Prop {
     final val saveAsButton = "Save As..."
     final val saveImageButton = "Save Image..."
     final val quitButton = "Quit"
+    final val resetButton = "Reset"
 
     // Alerts
     final val alertConfirm = "Confirm New File"
@@ -54,5 +43,8 @@ object Prop {
 
     // None option
     final val noneOption = "None"
+
+    // Default color
+    final val defaultColor = "#f2f2f2"
 
 }

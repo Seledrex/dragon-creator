@@ -85,4 +85,11 @@ class ImgElem(val resource: Res.Resource) {
         fillImg.setImage(writableImage)
         this.color = color
     }
+
+    def changeSize(res: (Double, Double)): Unit = {
+        fillImg.fitWidth = res._1
+        borderImg.fitWidth = res._1
+        fillImg.fitHeight = res._2
+        borderImg.fitHeight = res._2
+    }
 }

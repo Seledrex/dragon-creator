@@ -6,6 +6,8 @@ package app
 
 import java.io.{File, PrintWriter, StringWriter}
 import javax.imageio.ImageIO
+import javafx.scene.{paint => jfxp}
+import javafx.scene.{layout => jfxl}
 import org.apache.commons.io.FilenameUtils
 import res.{Prop, Res, Styles}
 import scalafx.Includes._
@@ -39,47 +41,57 @@ object App extends JFXApp {
     // Application Variables
     //==================================================================================================================
 
+    private var app = this
+    private var propName = null
+
     // Save file
     private var saveFile: File = _
 
     // Properties
-    private val madeChangesProp = new BooleanProperty(this, Prop.madeChangesPropName, false)
-    private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
-    private val statusProp = new StringProperty(this, Prop.statusPropName, "Untitled")
+    private val madeChangesProp = new BooleanProperty(app, propName, false)
+    private val dragModeProp = new BooleanProperty(app, propName, false)
+    private val statusProp = new StringProperty(app, propName, Prop.statusLabel)
+    private val resProp = new StringProperty(app, propName, Prop.imgResStr)
 
     // Base
-    private val baseCBProp = new StringProperty(this, Prop.baseCBPropName, Res.baseDragon.name)
-    private val baseCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.baseCPPropName, Color.White)
-    val baseSet: Set[ImgElem] =
-        Set(new ImgElem(Res.baseDragon),
-            new ImgElem(Res.baseSquare),
-            new ImgElem(Res.baseCircle))
+    private val baseCBProp = new StringProperty(app, propName, Res.baseSquare.name)
+    private val baseCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.White)
+    private val baseSet: Set[ImgElem] =
+        Set(new ImgElem(Res.baseSquare),
+            new ImgElem(Res.baseCircle),
+            new ImgElem(Res.baseDragon))
 
     // Top
-    private val topCBProp = new StringProperty(this, Prop.topCBPropName, Res.topSquare.name)
-    private val topCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.topCPPropName, Color.White)
-    val topSet: Set[ImgElem] =
+    private val topCBProp = new StringProperty(app, propName, Res.topSquare.name)
+    private val topCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.White)
+    private val topSet: Set[ImgElem] =
         Set(new ImgElem(Res.topSquare),
             new ImgElem(Res.topCircle))
 
     // Bottom
-    private val bottomCBProp = new StringProperty(this, Prop.bottomCBPropName, Res.bottomSquare.name)
-    private val bottomCPProp = new ObjectProperty[javafx.scene.paint.Color](this, Prop.bottomCPPropName, Color.White)
-    val bottomSet: Set[ImgElem] =
+    private val bottomCBProp = new StringProperty(app, propName, Res.bottomSquare.name)
+    private val bottomCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.White)
+    private val bottomSet: Set[ImgElem] =
         Set(new ImgElem(Res.bottomSquare),
             new ImgElem(Res.bottomCircle))
 
+    // Background
+    private val backgroundCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.web(Prop.defaultColor))
+    private val backgroundFillProp = new ObjectProperty[jfxl.Background](app, propName,
+        new jfxl.Background(new BackgroundFill(Color.White, CornerRadii.Empty, Insets.Empty)))
+    private val backgroundImg = new ImgElem(Res.background)
+
     // Put all sets into a list
-    val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[javafx.scene.paint.Color]))] =
+    private val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[jfxp.Color]))] =
         List(
             (Prop.bottomLabel,
-                Seq(Prop.noneOption, Res.bottomSquare.name, Res.bottomCircle.name),
+                Seq(Res.bottomSquare.name, Res.bottomCircle.name, Prop.noneOption),
                 (bottomSet, bottomCBProp, bottomCPProp)),
             (Prop.baseLabel,
-                Seq(Res.baseDragon.name, Res.baseSquare.name, Res.baseCircle.name),
+                Seq(Res.baseSquare.name, Res.baseCircle.name, Res.baseDragon.name),
                 (baseSet, baseCBProp, baseCPProp)),
             (Prop.topLabel,
-                Seq(Prop.noneOption, Res.topSquare.name, Res.topCircle.name),
+                Seq(Res.topSquare.name, Res.topCircle.name, Prop.noneOption),
                 (topSet, topCBProp, topCPProp)))
 
     // Set initial visibility
@@ -89,7 +101,7 @@ object App extends JFXApp {
     // Property Listeners
     //==================================================================================================================
 
-    // Set combo box change listeners
+    // Combo box change listeners
     imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
         if (newValue == Prop.noneOption) {
             x._3._1.find(img => img.name == oldValue).get.visible(false)
@@ -103,27 +115,46 @@ object App extends JFXApp {
         madeChangesProp.value = true
     })
 
-    // Set color picker change listeners
+    // Color picker change listeners
     imgList.foreach(x => x._3._3.onChange { (_, _, newValue) =>
         x._3._1.foreach(img => img.changeColor(newValue))
         madeChangesProp.value = true
     })
 
+    // Background change listener
+    backgroundCPProp.onChange { (_, _, newValue) =>
+        backgroundImg.changeColor(newValue)
+        backgroundFillProp.value = new jfxl.Background(
+            new BackgroundFill(newValue, new CornerRadii(7), Insets.Empty))
+    }
+
+    // Status change listener
     madeChangesProp.onChange { (_, oldValue, madeChange) =>
         if (oldValue == false && madeChange) {
             if (saveFile != null) {
                 statusProp.value = FilenameUtils.getBaseName(saveFile.getName) + "*"
             } else {
-                statusProp.value = "Untitled*"
+                statusProp.value = Prop.statusLabel + "*"
             }
         } else if (oldValue == true && !madeChange) {
             if (saveFile != null) {
                 statusProp.value = FilenameUtils.getBaseName(saveFile.getName)
             } else {
-                statusProp.value = "Untitled"
+                statusProp.value = Prop.statusLabel
             }
         }
     }
+
+    // Resolution change listener
+    resProp.onChange { (_, _, newValue) => {
+        "([0-9]+)×([0-9]+)".r.findFirstMatchIn(newValue) match {
+            case Some(res) => imgList.foreach(x =>
+                x._3._1.foreach(img =>
+                    img.changeSize((res.subgroups.head.toDouble, res.subgroups(1).toDouble))))
+                backgroundImg.changeSize((res.subgroups.head.toDouble, res.subgroups(1).toDouble))
+            case None =>
+        }
+    }}
 
     //==================================================================================================================
     // Stage
@@ -149,12 +180,22 @@ object App extends JFXApp {
                 children = Seq(
                     filePanel,
                     new HBox(Prop.padding) {
-                        val panelResetButton: Button = new Button("Reset Panels") {
+                        val panelResetButton: Button = new Button(Prop.resetButton) {
                             prefWidth = Prop.buttonWidth
                             onAction = (_: ActionEvent) => {
                                 optionPanel.relocate(Prop.padding, 0)
                                 imagePanel.relocate(150, 0)
+                                resProp.value = Prop.imgResStr
                             }
+                        }
+
+                        val resOptions: Seq[String] = Seq(
+                            (426, 240), (640, 360), (854, 480), (1024, 576),
+                            (1280, 720), (1600, 900), (1920, 1080)).map(x => x._1.toString + "×" + x._2.toString)
+
+                        val imgResComboBox: ComboBox[String] = new ComboBox(resOptions) {
+                            value = Prop.imgResStr
+                            prefWidth = 105
                         }
 
                         // Create a checkbox to toggle drag mode
@@ -163,15 +204,16 @@ object App extends JFXApp {
                             prefWidth = Prop.buttonWidth
                         }
 
-                        // Link the checkbox to the drag mode property
+                        // Bind properties
                         dragModeProp <== dragModeCheckbox.selected
+                        resProp <==> imgResComboBox.value
 
-                        children = Seq(panelResetButton, dragModeCheckbox)
+                        children = Seq(panelResetButton, imgResComboBox, dragModeCheckbox)
                         alignment = Pos.CenterLeft
                         style = Styles.panelStyle
                     },
                     new StackPane() {
-                        val status: Label = new Label("Untitled") {
+                        val status: Label = new Label(Prop.statusLabel) {
                             prefWidth = Prop.pickerWidth
                             alignmentInParent = Pos.Center
                             alignment = Pos.Center
@@ -223,8 +265,8 @@ object App extends JFXApp {
           * @return
           */
         def createLayerControl(label: String,
-                                 options: Seq[String],
-                                 props: (StringProperty, ObjectProperty[javafx.scene.paint.Color])): Node = {
+                               options: Seq[String],
+                               props: (StringProperty, ObjectProperty[jfxp.Color])): Node = {
 
             // Create combo box
             val cb: ComboBox[String] = new ComboBox(options) {
@@ -253,9 +295,25 @@ object App extends JFXApp {
             }
         }
 
+        def createBackgroundControl: Node = {
+            val cp: ColorPicker = new ColorPicker(Color.White) {
+                prefWidth = Prop.pickerWidth
+            }
+
+            backgroundCPProp <==> cp.value
+
+            new VBox(Prop.padding) {
+                children = Seq(
+                    new Label(backgroundImg.name),
+                    cp
+                )
+            }
+        }
+
         // Add all layer controls to panel
         new VBox(Prop.padding) {
-            children = imgList.reverse.map(x => createLayerControl(x._1, x._2, (x._3._2, x._3._3)))
+            children = imgList.reverse.map(x => createLayerControl(x._1, x._2, (x._3._2, x._3._3))) ++
+                Seq(createBackgroundControl)
             style = Styles.panelStyle
         }
     }
@@ -267,9 +325,11 @@ object App extends JFXApp {
       */
     private def createImagePanel(): Node = {
         new Pane() {
-            children = imgList.map(x => x._3._1).flatMap(set => set.toSeq).map(img => img.create)
+            children = Seq(backgroundImg.create) ++
+                imgList.map(x => x._3._1).flatMap(set => set.toSeq).map(img => img.create)
             alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
+            backgroundFillProp <==> background
         }
     }
 
@@ -340,6 +400,7 @@ object App extends JFXApp {
                 x._3._2.value = x._2.head
                 x._3._3.value = Color.White
             })
+            backgroundCPProp.value = Color.web(Prop.defaultColor)
             madeChangesProp.value = false
         }
 
@@ -377,24 +438,34 @@ object App extends JFXApp {
                 }
 
                 // File format regex
-                val regex = "(^[A-Za-z]+)=([A-Za-z]+);(#[0-9a-f]{6})".r
+                val elemRx = "(^[A-Za-z]+)=([A-Za-z]+);(#[0-9a-f]{6})"
+                val bgRx = "(^[A-Za-z]+)=(#[0-9a-f]{6})"
 
                 // Parse each line of the file
                 for (line <- Source.fromFile(saveFile).getLines()) {
-
-                    // Check for matches
-                    regex.findFirstMatchIn(line) match {
-                        case Some(m) =>
-                            // Set the corresponding layer
-                            imgList.find(x => x._1 == m.subgroups.head) match {
-                                case Some(layer) =>
-                                    layer._3._2.value = m.subgroups(1)
-                                    layer._3._3.value = Color.web(m.subgroups(2))
-                                case None =>
-                                    createBadFormatDialog().showAndWait(); return
-                            }
-                        case None =>
-                            createBadFormatDialog().showAndWait(); return
+                    if (line matches elemRx) {
+                        elemRx.r.findFirstMatchIn(line) match {
+                            case Some(m) =>
+                                // Set the corresponding layer
+                                imgList.find(x => x._1 == m.subgroups.head) match {
+                                    case Some(layer) =>
+                                        layer._3._2.value = m.subgroups(1)
+                                        layer._3._3.value = Color.web(m.subgroups(2))
+                                    case None =>
+                                        createBadFormatDialog().showAndWait(); return
+                                }
+                            case None =>
+                        }
+                    }
+                    else if (line matches bgRx) {
+                        bgRx.r.findFirstMatchIn(line) match {
+                            case Some(bg) =>
+                                backgroundCPProp.value = Color.web(bg.subgroups(1))
+                            case None =>
+                        }
+                    }
+                    else {
+                        createBadFormatDialog().showAndWait(); return
                     }
                 }
 
@@ -460,6 +531,7 @@ object App extends JFXApp {
                 imgList.foreach(x => {
                     printWriter.write(x._1 + "=" + x._3._2.value + ";" + colorToRGBCode(x._3._3.value) + "\n")
                 })
+                printWriter.write(backgroundImg.name + "=" + colorToRGBCode(backgroundImg.color) + "\n")
                 new Alert(AlertType.Information) {
                     initOwner(stage)
                     title = Prop.alertSuccess
@@ -501,17 +573,22 @@ object App extends JFXApp {
 
             // Group together visible elements and make copies
             val group: Group = new Group() {
-                children = imgList
-                    .map(x => x._3._1)
-                    .flatMap(set => set.toSeq)
-                    .filter(img => img.isVisible)
-                    .map(img => (img.resource, img.color))
-                    .map(x => {
-                        val copy = new ImgElem(x._1)
-                        copy.visible(true)
-                        copy.changeColor(x._2)
-                        copy })
-                    .flatMap(x => Seq(x.fillImg, x.borderImg))
+                children = Seq({
+                    val copy = new ImgElem(Res.background)
+                    copy.visible(true)
+                    copy.changeColor(backgroundImg.color)
+                    copy
+                }).flatMap(x => Seq(x.fillImg, x.borderImg)) ++
+                    imgList.map(x => x._3._1)
+                        .flatMap(set => set.toSeq)
+                        .filter(img => img.isVisible)
+                        .map(img => (img.resource, img.color))
+                        .map(x => {
+                            val copy = new ImgElem(x._1)
+                            copy.visible(true)
+                            copy.changeColor(x._2)
+                            copy })
+                        .flatMap(x => Seq(x.fillImg, x.borderImg))
                 blendMode = BlendMode.SrcAtop
             }
 
