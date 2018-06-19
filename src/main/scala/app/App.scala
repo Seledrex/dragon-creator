@@ -42,11 +42,10 @@ object App extends JFXApp {
     // Save file
     private var saveFile: File = _
 
-    // Keeps track if user made changes
-    private var madeChanges = false
-
     // Properties
+    private val madeChangesProp = new BooleanProperty(this, Prop.madeChangesPropName, false)
     private val dragModeProp = new BooleanProperty(this, Prop.dragModePropName, false)
+    private val statusProp = new StringProperty(this, Prop.statusPropName, "Untitled")
 
     // Base
     private val baseCBProp = new StringProperty(this, Prop.baseCBPropName, Res.baseDragon.name)
@@ -101,14 +100,30 @@ object App extends JFXApp {
             x._3._1.find(img => img.name == newValue).get.visible(true)
         }
 
-        madeChanges = true
+        madeChangesProp.value = true
     })
 
     // Set color picker change listeners
     imgList.foreach(x => x._3._3.onChange { (_, _, newValue) =>
         x._3._1.foreach(img => img.changeColor(newValue))
-        madeChanges = true
+        madeChangesProp.value = true
     })
+
+    madeChangesProp.onChange { (_, oldValue, madeChange) =>
+        if (oldValue == false && madeChange) {
+            if (saveFile != null) {
+                statusProp.value = FilenameUtils.getBaseName(saveFile.getName) + "*"
+            } else {
+                statusProp.value = "Untitled*"
+            }
+        } else if (oldValue == true && !madeChange) {
+            if (saveFile != null) {
+                statusProp.value = FilenameUtils.getBaseName(saveFile.getName)
+            } else {
+                statusProp.value = "Untitled"
+            }
+        }
+    }
 
     //==================================================================================================================
     // Stage
@@ -154,17 +169,16 @@ object App extends JFXApp {
                         alignment = Pos.CenterLeft
                         style = Styles.panelStyle
                     },
-                    new HBox(Prop.padding) {
-                        children = Seq(
-                            new Label("Unsaved File") {
-                                prefWidth = Prop.pickerWidth
-                                alignment = Pos.Center
-                            },
-                            new ProgressBar() {
-                                prefWidth = 377
-                                progress = 100
-                        })
-                        alignment = Pos.CenterLeft
+                    new StackPane() {
+                        val status: Label = new Label("Untitled") {
+                            prefWidth = Prop.pickerWidth
+                            alignmentInParent = Pos.Center
+                            alignment = Pos.Center
+                        }
+
+                        status.text <== statusProp
+
+                        children = Seq(status)
                         style = Styles.panelStyle
                     })
             }
@@ -325,7 +339,7 @@ object App extends JFXApp {
                 x._3._2.value = x._2.head
                 x._3._3.value = Color.White
             })
-            madeChanges = false
+            madeChangesProp.value = false
         }
 
         /**
@@ -383,7 +397,7 @@ object App extends JFXApp {
                     }
                 }
 
-                madeChanges = false
+                madeChangesProp.value = false
             }
         }
 
@@ -394,7 +408,7 @@ object App extends JFXApp {
         def resetElseLoad(init: Boolean): Unit = if (init) reset() else load()
 
         // Check if changes were made to the current file
-        if (madeChanges) {
+        if (madeChangesProp.value) {
             createSaveChangesDialog().showAndWait() match {
                 case Some(ButtonType.Yes) => saveRawrFile(false); resetElseLoad(init)
                 case Some(ButtonType.No) => resetElseLoad(init)
@@ -451,7 +465,7 @@ object App extends JFXApp {
                     headerText = "Successfully saved file."
                     contentText = "The file was saved successfully to " + saveFile.getAbsolutePath
                 }.showAndWait()
-                madeChanges = false
+                madeChangesProp.value = false
             } catch {
                 case e: Exception => createExceptionDialog(e, "Could not save file.", e.getMessage)
             } finally {
@@ -527,7 +541,7 @@ object App extends JFXApp {
       * Quits the program and asks the user to save changes.
       */
     private def quit(): Unit = {
-        if (madeChanges) {
+        if (madeChangesProp.value) {
             createSaveChangesDialog().showAndWait() match {
                 case Some(ButtonType.Yes) => saveRawrFile(false);  System.exit(0)
                 case Some(ButtonType.No) =>  System.exit(0)
@@ -550,7 +564,7 @@ object App extends JFXApp {
             title = Prop.alertConfirm
             headerText = "Would you like to save changes to the current file?"
             contentText = "You have made changes to " +
-                { if (saveFile == null) "an unsaved file" else saveFile.getName } + "."
+                { if (saveFile == null) "an unsaved file" else FilenameUtils.getBaseName(saveFile.getName) } + "."
             buttonTypes = Seq(ButtonType.Yes, ButtonType.No, ButtonType.Cancel)
         }
     }

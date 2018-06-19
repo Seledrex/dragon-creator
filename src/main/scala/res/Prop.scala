@@ -15,7 +15,12 @@ object Prop {
     final val buttonWidth: Int = 85
 
     // Property names
+    final val madeChangesPropName = "madeChangesProp"
     final val dragModePropName = "dragModeProp"
+    final val statusPropName = "statusProp"
+    final val progressPropName = "progressProp"
+    final val loadingPropName = "loadingProp"
+
     final val baseCBPropName = "baseProp"
     final val baseCPPropName = "baseCPProp"
     final val topCBPropName = "topCBProp"
