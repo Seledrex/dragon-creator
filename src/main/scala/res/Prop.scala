@@ -49,7 +49,6 @@ object Prop {
 
     // Resolution options
     final val resOptions: Seq[String] = Seq(
-        (426, 240), (640, 360), (854, 480), (1024, 576),
-        (1280, 720), (1600, 900), (1920, 1080)).map(x => x._1.toString + "×" + x._2.toString)
+        (854, 480), (1024, 576), (1280, 720), (1600, 900), (1920, 1080)).map(x => x._1.toString + "×" + x._2.toString)
 
 }

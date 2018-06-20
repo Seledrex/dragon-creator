@@ -552,7 +552,7 @@ object App extends JFXApp {
         }
 
         val resChoice = resChoiceDialog.showAndWait() match {
-            case Some(choice) => choice
+            case Some(choice) => convertRes(choice)
             case None => return
         }
 
@@ -580,6 +580,7 @@ object App extends JFXApp {
                     val copy = new ImgElem(Res.background)
                     copy.visible(true)
                     copy.changeColor(backgroundImg.color)
+                    copy.changeSize(resChoice)
                     copy
                 }).flatMap(x => Seq(x.fillImg, x.borderImg)) ++
                     imgList.map(x => x._3._1)
@@ -590,13 +591,14 @@ object App extends JFXApp {
                             val copy = new ImgElem(x._1)
                             copy.visible(true)
                             copy.changeColor(x._2)
+                            copy.changeSize(resChoice)
                             copy })
                         .flatMap(x => Seq(x.fillImg, x.borderImg))
                 blendMode = BlendMode.SrcAtop
             }
 
             // Create snapshot of group
-            val wr = new WritableImage(Prop.imgRes._1.toInt, Prop.imgRes._2.toInt)
+            val wr = new WritableImage(resChoice._1.toInt, resChoice._2.toInt)
             val out = group.snapshot(new SnapshotParameters(), wr)
 
             // Attempt to save image to disk
