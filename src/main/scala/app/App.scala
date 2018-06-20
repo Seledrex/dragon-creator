@@ -296,7 +296,7 @@ object App extends JFXApp {
           * @return Node.
           */
         def createBackgroundControl: Node = {
-            val cp: ColorPicker = new ColorPicker(Color.White) {
+            val cp: ColorPicker = new ColorPicker(Prop.defaultColor) {
                 prefWidth = Prop.pickerWidth
             }
 
