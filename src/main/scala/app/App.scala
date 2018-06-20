@@ -78,7 +78,7 @@ object App extends JFXApp {
     // Background
     private val backgroundCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.web(Prop.defaultColor))
     private val backgroundFillProp = new ObjectProperty[jfxl.Background](app, propName,
-        new jfxl.Background(new BackgroundFill(Color.White, CornerRadii.Empty, Insets.Empty)))
+        new jfxl.Background(new BackgroundFill(Color.web(Prop.defaultColor), CornerRadii.Empty, Insets.Empty)))
     private val backgroundImg = new ImgElem(Res.background)
 
     // Put all sets into a list
@@ -165,16 +165,19 @@ object App extends JFXApp {
         title = Prop.title
         resizable = true
 
+        // Create panels
         val filePanel: Node = createFilePanel()
         val optionPanel: Node = makeDraggable(createOptionsPanel())
         val imagePanel: Node = makeDraggable(createImagePanel())
 
+        // Make window panel
         val windowPanel: Node = new Pane() {
             margin = Insets(Prop.padding)
             children = new HBox(Prop.padding) {
                 children = Seq(
                     filePanel,
                     new HBox(Prop.padding) {
+                        // Reset button
                         val panelResetButton: Button = new Button(Prop.resetButton) {
                             prefWidth = Prop.buttonWidth
                             onAction = (_: ActionEvent) => {
@@ -184,6 +187,7 @@ object App extends JFXApp {
                             }
                         }
 
+                        // Resolution combo box
                         val imgResComboBox: ComboBox[String] = new ComboBox(Prop.resOptions) {
                             value = Prop.imgResStr
                             prefWidth = 105
@@ -204,12 +208,14 @@ object App extends JFXApp {
                         style = Styles.panelStyle
                     },
                     new StackPane() {
+                        // Status label
                         val status: Label = new Label(Prop.statusLabel) {
                             prefWidth = Prop.pickerWidth
                             alignmentInParent = Pos.Center
                             alignment = Pos.Center
                         }
 
+                        // Bind property
                         status.text <== statusProp
 
                         children = Seq(status)
@@ -222,7 +228,6 @@ object App extends JFXApp {
         val panelsPane: Pane = new Pane() {
             optionPanel.relocate(Prop.padding, 0)
             imagePanel.relocate(150, 0)
-
             children = Seq(imagePanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
@@ -286,6 +291,10 @@ object App extends JFXApp {
             }
         }
 
+        /**
+          * Creates a control for just the background.
+          * @return Node.
+          */
         def createBackgroundControl: Node = {
             val cp: ColorPicker = new ColorPicker(Color.White) {
                 prefWidth = Prop.pickerWidth
@@ -544,13 +553,15 @@ object App extends JFXApp {
       */
     private def saveImage(): Unit = {
 
+        // Create resolution choice dialog
         val resChoiceDialog = new ChoiceDialog(defaultChoice = Prop.imgResStr, choices = Prop.resOptions) {
             initOwner(stage)
-            title = "Select Resolution"
+            title = Prop.dialogResChoice
             headerText = "Select the resolution to output to."
             contentText = "Resolution:"
         }
 
+        // Get choice
         val resChoice = resChoiceDialog.showAndWait() match {
             case Some(choice) => convertRes(choice)
             case None => return

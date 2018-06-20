@@ -33,10 +33,11 @@ object Prop {
     final val quitButton = "Quit"
     final val resetButton = "Reset"
 
-    // Alerts
+    // Alerts and dialogs
     final val alertConfirm = "Confirm New File"
     final val alertSuccess = "Success"
     final val alertError = "Error"
+    final val dialogResChoice = "Select Resolution"
 
     // File chooser
     final val fileChooserTitle = "Choose File"
