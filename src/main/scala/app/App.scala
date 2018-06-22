@@ -8,7 +8,9 @@ import java.io.{File, PrintWriter, StringWriter}
 import javax.imageio.ImageIO
 import javafx.scene.{paint => jfxp}
 import javafx.scene.{layout => jfxl}
+import javafx.scene.{text => jfxt}
 import org.apache.commons.io.FilenameUtils
+import org.controlsfx.dialog.FontSelectorDialog
 import res.{Prop, Res, Styles}
 import scalafx.Includes._
 import scalafx.scene.paint.Color
@@ -18,11 +20,13 @@ import scalafx.embed.swing.SwingFXUtils
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.TextFormatter.Change
 import scalafx.scene.control._
 import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.WritableImage
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
+import scalafx.scene.text.{Font, Text}
 import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
 import scalafx.stage.FileChooser
 import scala.io.Source
@@ -41,8 +45,8 @@ object App extends JFXApp {
     // Application Variables
     //==================================================================================================================
 
-    private var app = this
-    private var propName = null
+    private val app = this
+    private val propName = null
 
     // Save file
     private var saveFile: File = _
@@ -80,6 +84,14 @@ object App extends JFXApp {
     private val backgroundFillProp = new ObjectProperty[jfxl.Background](app, propName,
         new jfxl.Background(new BackgroundFill(Color.web(Prop.defaultColor), CornerRadii.Empty, Insets.Empty)))
     private val backgroundImg = new ImgElem(Res.background)
+
+    // Text
+    private val titleTextFontProp = new ObjectProperty[jfxt.Font](app, propName, Font.font(Prop.defaultFont, Prop.titleFontSize))
+    private val bodyTextFontProp = new ObjectProperty[jfxt.Font](app, propName, Font.font(Prop.defaultFont, Prop.bodyFontSize))
+    private val titleTextProp = new StringProperty(app, propName, "")
+    private val bodyTextProp = new StringProperty(app, propName, "")
+    private val textCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.Black)
+    private val textFillProp = new ObjectProperty[jfxp.Paint](app, propName, Color.Black)
 
     // Put all sets into a list
     private val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[jfxp.Color]))] =
@@ -126,6 +138,7 @@ object App extends JFXApp {
         backgroundImg.changeColor(newValue)
         backgroundFillProp.value = new jfxl.Background(
             new BackgroundFill(newValue, new CornerRadii(7), Insets.Empty))
+        madeChangesProp.value = true
     }
 
     // Status change listener
@@ -149,6 +162,24 @@ object App extends JFXApp {
     resProp.onChange { (_, _, newValue) => {
         imgList.foreach(x => x._3._1.foreach(img => img.changeSize(convertRes(newValue))))
         backgroundImg.changeSize(convertRes(newValue))
+        titleTextFontProp.value = Font.font(titleTextFontProp.value.getName, Prop.resMap(newValue)._1)
+        bodyTextFontProp.value = Font.font(bodyTextFontProp.value.getName, Prop.resMap(newValue)._2)
+    }}
+
+    // Text change listeners
+    titleTextProp.onChange { (_, _, _) => madeChangesProp.value = true }
+    bodyTextProp.onChange { (_, _, _) => madeChangesProp.value = true }
+    textCPProp.onChange { (_, _, newValue) => {
+        textFillProp.value = newValue
+        madeChangesProp.value = true
+    }}
+    titleTextFontProp.onChange { (_, _, newValue) => {
+        Prop.titleFontSize = newValue.getSize
+        madeChangesProp.value = true
+    }}
+    bodyTextFontProp.onChange { (_, _, newValue) => {
+        Prop.bodyFontSize = newValue.getSize
+        madeChangesProp.value = true
     }}
 
     //==================================================================================================================
@@ -164,11 +195,13 @@ object App extends JFXApp {
         // Set parameters
         title = Prop.title
         resizable = true
+        maximized = true
 
         // Create panels
         val filePanel: Node = createFilePanel()
         val optionPanel: Node = makeDraggable(createOptionsPanel())
         val imagePanel: Node = makeDraggable(createImagePanel())
+        val textPanel: Node = makeDraggable(createTextPanel())
 
         // Make window panel
         val windowPanel: Node = new Pane() {
@@ -227,8 +260,9 @@ object App extends JFXApp {
         // Create a pane that holds multiple panels
         val panelsPane: Pane = new Pane() {
             optionPanel.relocate(Prop.padding, 0)
-            imagePanel.relocate(150, 0)
-            children = Seq(imagePanel, optionPanel)
+            textPanel.relocate(150, 0)
+            imagePanel.relocate(470, 0)
+            children = Seq(imagePanel, textPanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
 
@@ -326,7 +360,24 @@ object App extends JFXApp {
     private def createImagePanel(): Node = {
         new Pane() {
             children = Seq(backgroundImg.create) ++
-                imgList.map(x => x._3._1).flatMap(set => set.toSeq).map(img => img.create)
+                imgList.map(x => x._3._1).flatMap(set => set.toSeq).map(img => img.create) ++
+                Seq(new VBox() {
+                    children = Seq(
+                        new Text("") {
+                            font = Font.font(Prop.defaultFont, Prop.titleFontSize)
+                            titleTextFontProp <==> font
+                            titleTextProp <==> text
+                            fill <== textFillProp
+                        },
+                        new Text("") {
+                            font = Font.font(Prop.defaultFont, Prop.bodyFontSize)
+                            bodyTextFontProp <==> font
+                            bodyTextProp <==> text
+                            fill <== textFillProp
+                        }
+                    )
+                    relocate(10, 0)
+                })
             alignmentInParent = Pos.TopLeft
             style = Styles.panelStyle
             backgroundFillProp <==> background
@@ -375,6 +426,84 @@ object App extends JFXApp {
                     onAction = (_: ActionEvent) => {
                         quit()
                     }
+                }
+            )
+            style = Styles.panelStyle
+        }
+    }
+
+    private def createTextPanel(): Node = {
+        new VBox(Prop.padding) {
+            children = Seq(
+                new HBox(Prop.padding) {
+                    children = Seq(
+                        new TextField() {
+                            promptText = Prop.titlePrompt
+                            prefWidth = Prop.textAreaWidth - Prop.pickerWidth - 5
+                            textFormatter = new TextFormatter[String]( {change: Change =>
+                                val maxLen: Int = Prop.titleMaxLen
+                                if (change.controlNewText.length > maxLen) {
+                                    change.text = ""
+                                }
+                                if (change.anchor > maxLen) change.anchor = maxLen
+                                if (change.caretPosition > maxLen) change.caretPosition = maxLen
+                                change
+                            })
+                            titleTextProp <==> text
+                        },
+                        new Button(Prop.titleFontButton) {
+                            prefWidth = Prop.pickerWidth
+                            onAction = (_: ActionEvent) => {
+                                val fs = new FontSelectorDialog(titleTextFontProp.value) {
+                                    initOwner(stage)
+                                    setTitle(Prop.dialogFontChooser)
+                                }
+                                val f = fs.showAndWait()
+                                if (f.isPresent) {
+                                    titleTextFontProp.value = f.get()
+                                }
+                            }
+                        }
+                    )
+                },
+                new TextArea() {
+                    promptText = Prop.bodyPrompt
+                    prefWidth = Prop.textAreaWidth
+                    textFormatter = new TextFormatter[String]( {change: Change =>
+                        val maxLen: Int = Prop.bodyMaxLen; val maxLines: Int = Prop.bodyMaxLines
+                        def makeChange(change: Change): Unit = {
+                            change.text = ""
+                            change.anchor = change.anchor - 1
+                            change.caretPosition = change.caretPosition - 1
+                        }
+                        val split = change.controlNewText.split("[\n]")
+                        if ((for {c <- change.controlNewText.filter(x => x == '\n')} yield c).length > maxLines)
+                            makeChange(change)
+                        split.foreach (str => if (str.length > maxLen) makeChange(change))
+                        change
+                    })
+                    bodyTextProp <==> text
+                },
+                new HBox(Prop.padding) {
+                    children = Seq(
+                        new ColorPicker(Color.Black) {
+                            prefWidth = Prop.textAreaWidth - Prop.pickerWidth - 5
+                            textCPProp <==> value
+                        },
+                        new Button(Prop.bodyFontButton) {
+                            prefWidth = Prop.pickerWidth
+                            onAction = (_: ActionEvent) => {
+                                val fs = new FontSelectorDialog(bodyTextFontProp.value) {
+                                    initOwner(stage)
+                                    setTitle(Prop.dialogFontChooser)
+                                }
+                                val f = fs.showAndWait()
+                                if (f.isPresent) {
+                                    bodyTextFontProp.value = f.get()
+                                }
+                            }
+                        }
+                    )
                 }
             )
             style = Styles.panelStyle
