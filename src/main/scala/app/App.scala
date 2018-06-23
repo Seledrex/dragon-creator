@@ -862,6 +862,28 @@ object App extends JFXApp {
                             case MouseEvent.MouseDragged =>
                                 node.translateX = dragContext.initialTranslateX + me.x - dragContext.mouseAnchorX
                                 node.translateY = dragContext.initialTranslateY + me.y - dragContext.mouseAnchorY
+                            case MouseEvent.MouseReleased =>
+                                // @TODO Does not auto-snap from start of program or res-change (window or image pane)
+                                // @TODO Make this a def for window/pane resize too?
+                                // @TODO Possibly prevent panes from being dragged outside of window borders instead
+                                var snap = true
+                                if (snap) {
+                                    val bounds = node.localToScene(node.getBoundsInLocal)
+                                    if (bounds.getMinX < 0) {
+                                        node.layoutX.value -= bounds.getMinX
+                                    }
+                                    if (bounds.getMinY < 0) {
+                                        node.layoutY.value -= bounds.getMinY
+                                    }
+                                    if (bounds.getMaxX > stage.width()) {
+                                        node.layoutX.value -= bounds.getMaxX - stage.width() + 16
+                                        // Stage width is 16 pixels larger than the window width
+                                    }
+                                    if (bounds.getMaxY > stage.height()) {
+                                        node.layoutY.value -= bounds.getMaxY - stage.height() + 39
+                                        // Stage height is 39 pixels larger than the window height
+                                    }
+                                }
                             case _ =>
                         }
                         me.consume()
