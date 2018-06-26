@@ -26,7 +26,7 @@ import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.WritableImage
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
-import scalafx.scene.text.{Font, Text}
+import scalafx.scene.text.{Font, FontPosture, FontWeight, Text}
 import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
 import scalafx.stage.FileChooser
 import scala.io.Source
@@ -86,8 +86,12 @@ object App extends JFXApp {
     private val backgroundImg = new ImgElem(Res.background)
 
     // Text
-    private val titleTextFontProp = new ObjectProperty[jfxt.Font](app, propName, Font.font(Prop.defaultFont, Prop.titleFontSize))
-    private val bodyTextFontProp = new ObjectProperty[jfxt.Font](app, propName, Font.font(Prop.defaultFont, Prop.bodyFontSize))
+    private val titleFontScaleProp = new ObjectProperty[jfxt.Font](app, propName,
+        adjustFontSize(Prop.getDefaultTitleFont, Prop.getMultiplier(Prop.imgResStr)))
+    private val titleFPProp = new ObjectProperty[jfxt.Font](app, propName, Prop.getDefaultTitleFont)
+    private val bodyFontScaleProp = new ObjectProperty[jfxt.Font](app, propName,
+        adjustFontSize(Prop.getDefaultBodyFont, Prop.getMultiplier(Prop.imgResStr)))
+    private val bodyFPProp = new ObjectProperty[jfxt.Font](app, propName, Prop.getDefaultBodyFont)
     private val titleTextProp = new StringProperty(app, propName, "")
     private val bodyTextProp = new StringProperty(app, propName, "")
     private val textCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.Black)
@@ -162,25 +166,30 @@ object App extends JFXApp {
     resProp.onChange { (_, _, newValue) => {
         imgList.foreach(x => x._3._1.foreach(img => img.changeSize(convertRes(newValue))))
         backgroundImg.changeSize(convertRes(newValue))
-        titleTextFontProp.value = Font.font(titleTextFontProp.value.getName, Prop.resMap(newValue)._1)
-        bodyTextFontProp.value = Font.font(bodyTextFontProp.value.getName, Prop.resMap(newValue)._2)
+        titleFontScaleProp.value = adjustFontSize(titleFPProp.value, Prop.getMultiplier(resProp.value))
+        bodyFontScaleProp.value = adjustFontSize(bodyFPProp.value, Prop.getMultiplier(resProp.value))
     }}
 
     // Text change listeners
     titleTextProp.onChange { (_, _, _) => madeChangesProp.value = true }
     bodyTextProp.onChange { (_, _, _) => madeChangesProp.value = true }
+
+    // Text color change listener
     textCPProp.onChange { (_, _, newValue) => {
         textFillProp.value = newValue
         madeChangesProp.value = true
     }}
-    titleTextFontProp.onChange { (_, _, newValue) => {
-        Prop.titleFontSize = newValue.getSize
+
+    // Text font change listeners
+    titleFPProp.onChange { (_, _, newValue) =>
+        titleFontScaleProp.value = adjustFontSize(newValue, Prop.getMultiplier(resProp.value))
         madeChangesProp.value = true
-    }}
-    bodyTextFontProp.onChange { (_, _, newValue) => {
-        Prop.bodyFontSize = newValue.getSize
+    }
+
+    bodyFPProp.onChange { (_, _, newValue) =>
+        bodyFontScaleProp.value = adjustFontSize(newValue, Prop.getMultiplier(resProp.value))
         madeChangesProp.value = true
-    }}
+    }
 
     //==================================================================================================================
     // Stage
@@ -364,15 +373,15 @@ object App extends JFXApp {
                 Seq(new VBox() {
                     children = Seq(
                         new Text("") {
-                            font = Font.font(Prop.defaultFont, Prop.titleFontSize)
-                            titleTextFontProp <==> font
+                            font = titleFontScaleProp.value
                             titleTextProp <==> text
+                            font <== titleFontScaleProp
                             fill <== textFillProp
                         },
                         new Text("") {
-                            font = Font.font(Prop.defaultFont, Prop.bodyFontSize)
-                            bodyTextFontProp <==> font
+                            font = bodyFontScaleProp.value
                             bodyTextProp <==> text
+                            font <== bodyFontScaleProp
                             fill <== textFillProp
                         }
                     )
@@ -432,6 +441,10 @@ object App extends JFXApp {
         }
     }
 
+    /**
+      * Creates the text panel that lets users edit text on the image panel.
+      * @return Node.
+      */
     private def createTextPanel(): Node = {
         new VBox(Prop.padding) {
             children = Seq(
@@ -454,13 +467,13 @@ object App extends JFXApp {
                         new Button(Prop.titleFontButton) {
                             prefWidth = Prop.pickerWidth
                             onAction = (_: ActionEvent) => {
-                                val fs = new FontSelectorDialog(titleTextFontProp.value) {
+                                val fs = new FontSelectorDialog(titleFPProp.value) {
                                     initOwner(stage)
                                     setTitle(Prop.dialogFontChooser)
                                 }
                                 val f = fs.showAndWait()
                                 if (f.isPresent) {
-                                    titleTextFontProp.value = f.get()
+                                    titleFPProp.value = f.get()
                                 }
                             }
                         }
@@ -473,13 +486,13 @@ object App extends JFXApp {
                         val maxLen: Int = Prop.bodyMaxLen; val maxLines: Int = Prop.bodyMaxLines
                         def makeChange(change: Change): Unit = {
                             change.text = ""
-                            change.anchor = change.anchor - 1
-                            change.caretPosition = change.caretPosition - 1
+                            change.anchor = if (change.anchor > 0) change.anchor - 1 else 0
+                            change.caretPosition = if (change.caretPosition > 0) change.caretPosition - 1 else 0
                         }
                         val split = change.controlNewText.split("[\n]")
                         if ((for {c <- change.controlNewText.filter(x => x == '\n')} yield c).length > maxLines)
                             makeChange(change)
-                        split.foreach (str => if (str.length > maxLen) makeChange(change))
+                        split.foreach(str => if (str.length > maxLen) makeChange(change))
                         change
                     })
                     bodyTextProp <==> text
@@ -493,13 +506,13 @@ object App extends JFXApp {
                         new Button(Prop.bodyFontButton) {
                             prefWidth = Prop.pickerWidth
                             onAction = (_: ActionEvent) => {
-                                val fs = new FontSelectorDialog(bodyTextFontProp.value) {
+                                val fs = new FontSelectorDialog(bodyFPProp.value) {
                                     initOwner(stage)
                                     setTitle(Prop.dialogFontChooser)
                                 }
                                 val f = fs.showAndWait()
                                 if (f.isPresent) {
-                                    bodyTextFontProp.value = f.get()
+                                    bodyFPProp.value = f.get()
                                 }
                             }
                         }
@@ -524,12 +537,26 @@ object App extends JFXApp {
           * Resets the images to default.
           */
         def reset(): Unit = {
+            // Reset save file
             saveFile = null
+
+            // Reset image panel
             imgList.foreach(x => {
                 x._3._2.value = x._2.head
                 x._3._3.value = Color.White
             })
+
+            // Reset background
             backgroundCPProp.value = Color.web(Prop.defaultColor)
+
+            // Reset text
+            titleTextProp.value = ""
+            bodyTextProp.value = ""
+            titleFPProp.value = Prop.getDefaultTitleFont
+            bodyFPProp.value = Prop.getDefaultBodyFont
+            textCPProp.value = Color.Black
+
+            // Reset made changes
             madeChangesProp.value = false
         }
 
@@ -542,9 +569,9 @@ object App extends JFXApp {
               * Creates a bad format dialog.
               * @return Alert.
               */
-            def createBadFormatDialog(): Alert = createExceptionDialog(
+            def createBadFormatDialog(fileName: String): Alert = createExceptionDialog(
                 new Exception("Incorrect file format."),
-                "Could not load " + saveFile.getName + ".",
+                "Could not load " + fileName + ".",
                 "Incorrect file format.")
 
             // Create file chooser that only accepts rawr files
@@ -562,39 +589,78 @@ object App extends JFXApp {
 
                 // Ensure file extension
                 if (FilenameUtils.getExtension(saveFile.getAbsolutePath) != "rawr") {
-                    createBadFormatDialog().showAndWait()
+                    createBadFormatDialog(saveFile.getName).showAndWait()
                     return
                 }
 
                 // File format regex
                 val elemRx = "(^[A-Za-z]+)=([A-Za-z]+);(#[0-9a-f]{6})"
-                val bgRx = "(^[A-Za-z]+)=(#[0-9a-f]{6})"
+                val bgRx = "Background=(#[0-9a-f]{6})"
+                val ttRx = "TitleText=(.*)"
+                val tfRx = "TitleFont=([^;\n]+);([^;\n]+);(\\d*\\.?\\d*)"
+                val btRx = "BodyText=(.*)"
+                val bfRx = "BodyFont=([^;\n]+);([^;\n]+);(\\d*\\.?\\d*)"
+                val tcRx = "TextColor=(#[0-9a-f]{6})"
 
                 // Parse each line of the file
                 for (line <- Source.fromFile(saveFile).getLines()) {
-                    if (line matches elemRx) {
-                        elemRx.r.findFirstMatchIn(line) match {
-                            case Some(m) =>
-                                // Set the corresponding layer
-                                imgList.find(x => x._1 == m.subgroups.head) match {
-                                    case Some(layer) =>
-                                        layer._3._2.value = m.subgroups(1)
-                                        layer._3._3.value = Color.web(m.subgroups(2))
-                                    case None =>
-                                        createBadFormatDialog().showAndWait(); return
-                                }
-                            case None =>
-                        }
-                    }
-                    else if (line matches bgRx) {
-                        bgRx.r.findFirstMatchIn(line) match {
-                            case Some(bg) =>
-                                backgroundCPProp.value = Color.web(bg.subgroups(1))
-                            case None =>
-                        }
-                    }
-                    else {
-                        createBadFormatDialog().showAndWait(); return
+                    line match {
+                        // Found image element
+                        case ln if ln matches elemRx =>
+                            elemRx.r.findFirstMatchIn(line) match {
+                                case Some(m) =>
+                                    imgList.find(x => x._1 == m.subgroups.head) match {
+                                        case Some(layer) =>
+                                            layer._3._2.value = m.subgroups(1)
+                                            layer._3._3.value = Color.web(m.subgroups(2))
+                                        case None =>
+                                            createBadFormatDialog(saveFile.getName).showAndWait(); return
+                                    }
+                                case None =>
+                            }
+                        // Found background
+                        case ln if ln matches bgRx =>
+                            bgRx.r.findFirstMatchIn(line) match {
+                                case Some(bg) => backgroundCPProp.value = Color.web(bg.subgroups.head)
+                                case None =>
+                            }
+                        // Found title text
+                        case ln if ln matches ttRx =>
+                            ttRx.r.findFirstMatchIn(line) match {
+                                case Some(tt) => titleTextProp.value = tt.subgroups.head
+                                case None =>
+                            }
+                        // Found title font
+                        case ln if ln matches tfRx =>
+                            tfRx.r.findFirstMatchIn(line) match {
+                                case Some(tf) => titleFPProp.value = loadFont(tf.subgroups.head,
+                                    tf.subgroups(1), tf.subgroups(2).toDouble, 1)
+                                case None =>
+                            }
+                        // Found body text
+                        case ln if ln matches btRx =>
+                            btRx.r.findFirstMatchIn(line) match {
+                                case Some(bt) =>
+                                    bodyTextProp.value = bt.subgroups.head.replaceAll("NEWLINE", "\n")
+                                case None =>
+                            }
+                        // Found body font
+                        case ln if ln matches bfRx =>
+                            bfRx.r.findFirstMatchIn(line) match {
+                                case Some(bf) => bodyFPProp.value = loadFont(bf.subgroups.head,
+                                    bf.subgroups(1), bf.subgroups(2).toDouble, 1)
+                                case None =>
+                            }
+                        // Found text fill color
+                        case ln if ln matches tcRx =>
+                            tcRx.r.findFirstMatchIn(line) match {
+                                case Some(tf) => textCPProp.value = Color.web(tf.subgroups.head)
+                                case None =>
+                            }
+                        case _ =>
+                            println(line)
+                            val fileName = saveFile.getName
+                            reset(); createBadFormatDialog(fileName).showAndWait(); return
                     }
                 }
 
@@ -660,7 +726,12 @@ object App extends JFXApp {
                 imgList.foreach(x => {
                     printWriter.write(x._1 + "=" + x._3._2.value + ";" + colorToRGBCode(x._3._3.value) + "\n")
                 })
-                printWriter.write(backgroundImg.name + "=" + colorToRGBCode(backgroundImg.color) + "\n")
+                printWriter.write("Background=" + colorToRGBCode(backgroundImg.color) + "\n")
+                printWriter.write("TitleText=" + titleTextProp.value + "\n")
+                printWriter.write("TitleFont=" + titleFPProp.value.getFamily + ";" + titleFPProp.value.getStyle + ";" + titleFPProp.value.getSize + "\n")
+                printWriter.write("BodyText=" + bodyTextProp.value.replaceAll("\n", "NEWLINE") + "\n")
+                printWriter.write("BodyFont=" + bodyFPProp.value.getFamily + ";" + bodyFPProp.value.getStyle + ";" + bodyFPProp.value.getSize + "\n")
+                printWriter.write("TextColor=" + colorToRGBCode(textCPProp.value) + "\n")
                 new Alert(AlertType.Information) {
                     initOwner(stage)
                     title = Prop.alertSuccess
@@ -692,7 +763,7 @@ object App extends JFXApp {
 
         // Get choice
         val resChoice = resChoiceDialog.showAndWait() match {
-            case Some(choice) => convertRes(choice)
+            case Some(choice) => choice
             case None => return
         }
 
@@ -714,31 +785,53 @@ object App extends JFXApp {
                 file = new File(file.getAbsolutePath + ".png")
             }
 
+            def copyBackground(): Seq[Node] = {
+                Seq(new ImgElem(Res.background) {
+                        visible(true)
+                        changeColor(backgroundImg.color)
+                        changeSize(convertRes(resChoice))
+                    }
+                ).flatMap(x => Seq(x.fillImg, x.borderImg))
+            }
+
+            def copyImage(): Seq[Node] = {
+                imgList.map(x => x._3._1)
+                    .flatMap(set => set.toSeq)
+                    .filter(img => img.isVisible)
+                    .map(img => (img.resource, img.color))
+                    .map(x =>
+                        new ImgElem(x._1) {
+                            visible(true)
+                            changeColor(x._2)
+                            changeSize(convertRes(resChoice))
+                        })
+                    .flatMap(x => Seq(x.fillImg, x.borderImg))
+            }
+
+            def copyText(): Seq[Node] = {
+                Seq(new VBox() {
+                    children = Seq(
+                        new Text(titleTextProp.value) {
+                            font = adjustFontSize(titleFPProp.value,  Prop.getMultiplier(resChoice))
+                            fill = textFillProp.value
+                        },
+                        new Text(bodyTextProp.value) {
+                            font = adjustFontSize(bodyFPProp.value,  Prop.getMultiplier(resChoice))
+                            fill = textFillProp.value
+                        }
+                    )
+                    relocate(10, 0)
+                })
+            }
+
             // Group together visible elements and make copies
             val group: Group = new Group() {
-                children = Seq({
-                    val copy = new ImgElem(Res.background)
-                    copy.visible(true)
-                    copy.changeColor(backgroundImg.color)
-                    copy.changeSize(resChoice)
-                    copy
-                }).flatMap(x => Seq(x.fillImg, x.borderImg)) ++
-                    imgList.map(x => x._3._1)
-                        .flatMap(set => set.toSeq)
-                        .filter(img => img.isVisible)
-                        .map(img => (img.resource, img.color))
-                        .map(x => {
-                            val copy = new ImgElem(x._1)
-                            copy.visible(true)
-                            copy.changeColor(x._2)
-                            copy.changeSize(resChoice)
-                            copy })
-                        .flatMap(x => Seq(x.fillImg, x.borderImg))
+                children = copyBackground() ++ copyImage() ++ copyText()
                 blendMode = BlendMode.SrcAtop
             }
 
             // Create snapshot of group
-            val wr = new WritableImage(resChoice._1.toInt, resChoice._2.toInt)
+            val wr = new WritableImage(convertRes(resChoice)._1.toInt, convertRes(resChoice)._2.toInt)
             val out = group.snapshot(new SnapshotParameters(), wr)
 
             // Attempt to save image to disk
@@ -897,5 +990,35 @@ object App extends JFXApp {
             case Some(res) => (res.subgroups.head.toDouble, res.subgroups(1).toDouble)
             case None => Prop.imgRes
         }
+    }
+
+    /**
+      * Adjusts the font size of an existing font.
+      * @param font Font to adjust.
+      * @param multiplier Multiplier to adjust size by.
+      * @return New font with correct style and size.
+      */
+    private def adjustFontSize(font: jfxt.Font, multiplier: Double): jfxt.Font = {
+        loadFont(font.getFamily, font.getStyle, font.getSize, multiplier)
+    }
+
+    /**
+      * Loads a font from a give font family, style, size, and multiplier.
+      * @param family Font family.
+      * @param style Font style.
+      * @param size Font size.
+      * @param multiplier Multiplier to adjust size by.
+      * @return New font with correct style and size.
+      */
+    private def loadFont(family: String, style: String, size: Double, multiplier: Double): jfxt.Font = {
+        val weight: FontWeight = style match {
+            case s if s.contains("Bold") => FontWeight.Bold
+            case _ => FontWeight.Normal
+        }
+        val posture: FontPosture = style match {
+            case s if s.contains("Italic") => FontPosture.Italic
+            case _ => FontPosture.Regular
+        }
+        Font.font(family, weight, posture, size * multiplier)
     }
 }

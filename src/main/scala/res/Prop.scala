@@ -1,5 +1,8 @@
 package res
 
+import javafx.scene.{text => jfxt}
+import scalafx.scene.text.Font
+
 /**
   * Important properties defined here.
   */
@@ -52,20 +55,19 @@ object Prop {
     // Default color
     final val defaultColor = "#f2f2f2"
 
-    var titleFontSize = 30d
-    var bodyFontSize = 14d
-
-    final val resMap = Map(
-        "854×480" -> (titleFontSize / 1.2, bodyFontSize / 1.2),
-        "1024×576" -> (titleFontSize, bodyFontSize),
-        "1280×720" -> (titleFontSize * 1.25, bodyFontSize * 1.25),
-        "1600×900" -> (titleFontSize * 1.56, bodyFontSize * 1.56),
-        "1920×1080" -> (titleFontSize * 1.875, bodyFontSize * 1.875))
+    final val getMultiplier = Map(
+        "854×480" -> 1.00,
+        "1024×576" -> 1.20,
+        "1280×720" -> 1.50,
+        "1600×900" -> 1.87,
+        "1920×1080" -> 2.25
+    )
 
     final val resOptions: Seq[String] = Seq("854×480", "1024×576", "1280×720", "1600×900", "1920×1080")
 
     // Default font
-    final val defaultFont: String = "Helvetica"
+    def getDefaultTitleFont: jfxt.Font = Font.font("Helvetica", 25d)
+    def getDefaultBodyFont: jfxt.Font = Font.font("Helvetica", 12d)
 
     // Text box limits
     final val titleMaxLen: Int = 35
