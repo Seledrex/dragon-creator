@@ -224,7 +224,8 @@ object App extends JFXApp {
                             prefWidth = Prop.buttonWidth
                             onAction = (_: ActionEvent) => {
                                 optionPanel.relocate(Prop.padding, 0)
-                                imagePanel.relocate(150, 0)
+                                textPanel.relocate(150, 0)
+                                imagePanel.relocate(470, 0)
                                 resProp.value = Prop.imgResStr
                             }
                         }
