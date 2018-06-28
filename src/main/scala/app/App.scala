@@ -5,15 +5,13 @@ package app
 //======================================================================================================================
 
 import java.io.{File, PrintWriter, StringWriter}
+
+import javafx.scene.{layout => jfxl, paint => jfxp, text => jfxt}
 import javax.imageio.ImageIO
-import javafx.scene.{paint => jfxp}
-import javafx.scene.{layout => jfxl}
-import javafx.scene.{text => jfxt}
 import org.apache.commons.io.FilenameUtils
 import org.controlsfx.dialog.FontSelectorDialog
 import res.{Prop, Res, Styles}
 import scalafx.Includes._
-import scalafx.scene.paint.Color
 import scalafx.application.JFXApp
 import scalafx.beans.property._
 import scalafx.embed.swing.SwingFXUtils
@@ -26,9 +24,11 @@ import scalafx.scene.effect.BlendMode
 import scalafx.scene.image.WritableImage
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
+import scalafx.scene.paint.Color
 import scalafx.scene.text.{Font, FontPosture, FontWeight, Text}
 import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
 import scalafx.stage.FileChooser
+
 import scala.io.Source
 
 //======================================================================================================================
@@ -960,7 +960,7 @@ object App extends JFXApp {
                                 // @TODO Does not auto-snap from start of program or res-change (window or image pane)
                                 // @TODO Make this a def for window/pane resize too?
                                 // @TODO Possibly prevent panes from being dragged outside of window borders instead
-                                var snap = true
+                                val snap = true
                                 if (snap) {
                                     val bounds = node.localToScene(node.getBoundsInLocal)
                                     if (bounds.getMinX < 0) {
