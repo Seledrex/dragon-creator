@@ -48,8 +48,15 @@ object Test extends JFXApp {
         maximized = true
 
         val image: Image = new Image("base_square_fill.png")
-        val imageView: ImageView = new ImageView(image)
-        imageView.setClip(new ImageView(image))
+        val imageView: ImageView = new ImageView(image) {
+            fitWidth = 854
+            fitHeight = 480
+        }
+        val clip: ImageView = new ImageView(image)
+        clip.setFitHeight(480)
+        clip.setFitWidth(854)
+
+        imageView.setClip(clip)
         imageView.cache = true
         imageView.setCacheHint(CacheHint.Speed)
 

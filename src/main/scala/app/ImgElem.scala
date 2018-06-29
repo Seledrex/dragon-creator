@@ -1,8 +1,12 @@
 package app
 
 import res.{Prop, Res}
+import scalafx.beans.property.ObjectProperty
 import scalafx.geometry.Pos
-import scalafx.scene.image.{Image, ImageView, WritableImage}
+import scalafx.scene.CacheHint
+import scalafx.scene.image.{Image, ImageView}
+import javafx.scene.{effect => jfxe}
+import scalafx.scene.effect.ColorInput
 import scalafx.scene.layout.Pane
 import scalafx.scene.paint.Color
 
@@ -14,11 +18,21 @@ import scalafx.scene.paint.Color
   */
 class ImgElem(val resource: Res.Resource) {
 
+    // Clip image
+    private val clipImg: ImageView = new ImageView(image = new Image(resource.fill)) {
+        fitWidth = Prop.imgRes._1
+        fitHeight = Prop.imgRes._2
+        visible = false
+    }
+
     // Fill image
     var fillImg: ImageView = new ImageView(image = new Image(resource.fill)) {
         fitWidth = Prop.imgRes._1
         fitHeight = Prop.imgRes._2
         visible = false
+        clip = clipImg
+        cache = true
+        cacheHint = CacheHint.Speed
     }
 
     // Border image
@@ -38,13 +52,18 @@ class ImgElem(val resource: Res.Resource) {
     private val width = fillImg.getImage.getWidth.toInt
     private val height = fillImg.getImage.getHeight.toInt
 
-    // Used for updating the image's color
-    private val pixelReader = fillImg.getImage.getPixelReader
-    private val writableImage = new WritableImage(width, height)
-    private val pixelWriter = writableImage.getPixelWriter
-
     // Name of resource
     val name: String = resource.name
+
+    // Effect property
+    val effectProp = new ObjectProperty[jfxe.Effect](this, null,
+        new ColorInput(
+            0, 0, width, height, Color.White
+        )
+    )
+
+    // Bind fill image effect
+    fillImg.effect <== effectProp
 
     /**
       * Creates a pane that combines the fill and border. The fill is
@@ -63,6 +82,7 @@ class ImgElem(val resource: Res.Resource) {
       * @param v True to be show, false otherwise.
       */
     def visible(v: Boolean): Unit = {
+        clipImg.visible = v
         fillImg.visible = v
         borderImg.visible = v
         isVisible = v
@@ -74,21 +94,17 @@ class ImgElem(val resource: Res.Resource) {
       * @param color Color to change to.
       */
     def changeColor(color: Color): Unit = {
-        for (x <- 0 until width) {
-            for (y <- 0 until height) {
-                if (pixelReader.getColor(x, y).isOpaque) {
-                    pixelWriter.setColor(x, y, color)
-                }
-            }
-        }
-
-        fillImg.setImage(writableImage)
+        effectProp.value = new ColorInput(
+            0, 0, width, height, color
+        )
         this.color = color
     }
 
     def changeSize(res: (Double, Double)): Unit = {
+        clipImg.fitWidth = res._1
         fillImg.fitWidth = res._1
         borderImg.fitWidth = res._1
+        clipImg.fitHeight = res._2
         fillImg.fitHeight = res._2
         borderImg.fitHeight = res._2
     }
