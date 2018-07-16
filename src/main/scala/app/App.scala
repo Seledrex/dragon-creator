@@ -10,7 +10,7 @@ import javafx.scene.{layout => jfxl, paint => jfxp, text => jfxt}
 import javax.imageio.ImageIO
 import org.apache.commons.io.FilenameUtils
 import org.controlsfx.dialog.FontSelectorDialog
-import res.{Prop, Res, Styles}
+import res.{Prop, Res}
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property._
@@ -45,57 +45,57 @@ object App extends JFXApp {
     // Application Variables
     //==================================================================================================================
 
-    private val app = this
+    private val bean = this
     private val propName = null
 
     // Save file
     private var saveFile: File = _
 
     // Properties
-    private val madeChangesProp = new BooleanProperty(app, propName, false)
-    private val dragModeProp = new BooleanProperty(app, propName, false)
-    private val statusProp = new StringProperty(app, propName, Prop.statusLabel)
-    private val resProp = new StringProperty(app, propName, Prop.imgResStr)
+    private val madeChangesProp = new BooleanProperty(bean, propName, false)
+    private val dragModeProp = new BooleanProperty(bean, propName, false)
+    private val statusProp = new StringProperty(bean, propName, Prop.statusLabel)
+    private val resProp = new StringProperty(bean, propName, Prop.imgResStr)
 
     // Base
-    private val baseCBProp = new StringProperty(app, propName, Res.baseSquare.name)
-    private val baseCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.White)
+    private val baseCBProp = new StringProperty(bean, propName, Res.baseSquare.name)
+    private val baseCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.White)
     private val baseSet: Set[ImgElem] =
         Set(new ImgElem(Res.baseSquare),
             new ImgElem(Res.baseCircle),
             new ImgElem(Res.baseDragon))
 
     // Top
-    private val topCBProp = new StringProperty(app, propName, Res.topSquare.name)
-    private val topCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.White)
+    private val topCBProp = new StringProperty(bean, propName, Res.topSquare.name)
+    private val topCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.White)
     private val topSet: Set[ImgElem] =
         Set(new ImgElem(Res.topSquare),
             new ImgElem(Res.topCircle))
 
     // Bottom
-    private val bottomCBProp = new StringProperty(app, propName, Res.bottomSquare.name)
-    private val bottomCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.White)
+    private val bottomCBProp = new StringProperty(bean, propName, Res.bottomSquare.name)
+    private val bottomCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.White)
     private val bottomSet: Set[ImgElem] =
         Set(new ImgElem(Res.bottomSquare),
             new ImgElem(Res.bottomCircle))
 
     // Background
-    private val backgroundCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.web(Prop.defaultColor))
-    private val backgroundFillProp = new ObjectProperty[jfxl.Background](app, propName,
+    private val backgroundCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.web(Prop.defaultColor))
+    private val backgroundFillProp = new ObjectProperty[jfxl.Background](bean, propName,
         new jfxl.Background(new BackgroundFill(Color.web(Prop.defaultColor), CornerRadii.Empty, Insets.Empty)))
     private val backgroundImg = new ImgElem(Res.background)
 
     // Text
-    private val titleFontScaleProp = new ObjectProperty[jfxt.Font](app, propName,
+    private val titleFontScaleProp = new ObjectProperty[jfxt.Font](bean, propName,
         adjustFontSize(Prop.getDefaultTitleFont, Prop.getMultiplier(Prop.imgResStr)))
-    private val titleFPProp = new ObjectProperty[jfxt.Font](app, propName, Prop.getDefaultTitleFont)
-    private val bodyFontScaleProp = new ObjectProperty[jfxt.Font](app, propName,
+    private val titleFPProp = new ObjectProperty[jfxt.Font](bean, propName, Prop.getDefaultTitleFont)
+    private val bodyFontScaleProp = new ObjectProperty[jfxt.Font](bean, propName,
         adjustFontSize(Prop.getDefaultBodyFont, Prop.getMultiplier(Prop.imgResStr)))
-    private val bodyFPProp = new ObjectProperty[jfxt.Font](app, propName, Prop.getDefaultBodyFont)
-    private val titleTextProp = new StringProperty(app, propName, "")
-    private val bodyTextProp = new StringProperty(app, propName, "")
-    private val textCPProp = new ObjectProperty[jfxp.Color](app, propName, Color.Black)
-    private val textFillProp = new ObjectProperty[jfxp.Paint](app, propName, Color.Black)
+    private val bodyFPProp = new ObjectProperty[jfxt.Font](bean, propName, Prop.getDefaultBodyFont)
+    private val titleTextProp = new StringProperty(bean, propName, "")
+    private val bodyTextProp = new StringProperty(bean, propName, "")
+    private val textCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.Black)
+    private val textFillProp = new ObjectProperty[jfxp.Paint](bean, propName, Color.Black)
 
     // Put all sets into a list
     private val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[jfxp.Color]))] =
@@ -212,6 +212,19 @@ object App extends JFXApp {
         val imagePanel: Node = makeDraggable(createImagePanel())
         val textPanel: Node = makeDraggable(createTextPanel())
 
+        val colorChooser: ColorChooser = new ColorChooser() {
+            styleClass.add("panel-style")
+        }
+
+        val colorPalette: ColorPalette = new ColorPalette() {
+            styleClass.add("panel-style")
+        }
+
+        colorChooser.value <==> colorPalette.value
+
+        val colorChooserPanel: Node = makeDraggable(colorChooser)
+        val colorPalettePanel: Node = makeDraggable(colorPalette)
+
         // Make window panel
         val windowPanel: Node = new Pane() {
             margin = Insets(Prop.padding)
@@ -248,7 +261,7 @@ object App extends JFXApp {
 
                         children = Seq(panelResetButton, imgResComboBox, dragModeCheckbox)
                         alignment = Pos.CenterLeft
-                        style = Styles.panelStyle
+                        styleClass.add("panel-style")
                     },
                     new StackPane() {
                         // Status label
@@ -262,7 +275,7 @@ object App extends JFXApp {
                         status.text <== statusProp
 
                         children = Seq(status)
-                        style = Styles.panelStyle
+                        styleClass.add("panel-style")
                     })
             }
         }
@@ -272,16 +285,19 @@ object App extends JFXApp {
             optionPanel.relocate(Prop.padding, 0)
             textPanel.relocate(150, 0)
             imagePanel.relocate(470, 0)
-            children = Seq(imagePanel, textPanel, optionPanel)
+            colorChooserPanel.relocate(Prop.padding, 365)
+            colorPalettePanel.relocate(Prop.padding, 669)
+            children = Seq(imagePanel, textPanel, colorChooserPanel, colorPalettePanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
 
         // Create scene containing all elements and proper resolution
         scene = new Scene(Prop.resolution._1, Prop.resolution._2) {
+            stylesheets.add("styles.css")
             root = new BorderPane() {
                 center = panelsPane
                 top = windowPanel
-                style = Styles.backgroundStyle
+                styleClass.add("background-style")
             }
         }
     }
@@ -358,7 +374,7 @@ object App extends JFXApp {
         new VBox(Prop.padding) {
             children = imgList.reverse.map(x => createLayerControl(x._1, x._2, (x._3._2, x._3._3))) ++
                 Seq(createBackgroundControl)
-            style = Styles.panelStyle
+            styleClass.add("panel-style")
         }
     }
 
@@ -389,7 +405,7 @@ object App extends JFXApp {
                     relocate(10, 0)
                 })
             alignmentInParent = Pos.TopLeft
-            style = Styles.panelStyle
+            styleClass.add("panel-style")
             backgroundFillProp <==> background
         }
     }
@@ -438,7 +454,7 @@ object App extends JFXApp {
                     }
                 }
             )
-            style = Styles.panelStyle
+            styleClass.add("panel-style")
         }
     }
 
@@ -520,7 +536,7 @@ object App extends JFXApp {
                     )
                 }
             )
-            style = Styles.panelStyle
+            styleClass.add("panel-style")
         }
     }
 
@@ -691,15 +707,6 @@ object App extends JFXApp {
       */
     private def saveRawrFile(saveAs: Boolean): Unit = {
 
-        /**
-          * Converts a ScalaFX Color to its hex code.
-          * @param color Color to convert.
-          * @return Hex code string.
-          */
-        def colorToRGBCode(color: Color): String = {
-            "#%02x%02x%02x" format ((color.red * 255).toInt, (color.green * 255).toInt, (color.blue * 255).toInt)
-        }
-
         // Open file chooser if necessary
         if (saveFile == null || saveAs) {
             val chooser = new FileChooser() {
@@ -725,14 +732,14 @@ object App extends JFXApp {
             try {
                 printWriter = new PrintWriter(saveFile)
                 imgList.foreach(x => {
-                    printWriter.write(x._1 + "=" + x._3._2.value + ";" + colorToRGBCode(x._3._3.value) + "\n")
+                    printWriter.write(x._1 + "=" + x._3._2.value + ";" + Util.colorToRGBCode(x._3._3.value) + "\n")
                 })
-                printWriter.write("Background=" + colorToRGBCode(backgroundImg.color) + "\n")
+                printWriter.write("Background=" + Util.colorToRGBCode(backgroundImg.color) + "\n")
                 printWriter.write("TitleText=" + titleTextProp.value + "\n")
                 printWriter.write("TitleFont=" + titleFPProp.value.getFamily + ";" + titleFPProp.value.getStyle + ";" + titleFPProp.value.getSize + "\n")
                 printWriter.write("BodyText=" + bodyTextProp.value.replaceAll("\n", "NEWLINE") + "\n")
                 printWriter.write("BodyFont=" + bodyFPProp.value.getFamily + ";" + bodyFPProp.value.getStyle + ";" + bodyFPProp.value.getSize + "\n")
-                printWriter.write("TextColor=" + colorToRGBCode(textCPProp.value) + "\n")
+                printWriter.write("TextColor=" + Util.colorToRGBCode(textCPProp.value) + "\n")
                 new Alert(AlertType.Information) {
                     initOwner(stage)
                     title = Prop.alertSuccess

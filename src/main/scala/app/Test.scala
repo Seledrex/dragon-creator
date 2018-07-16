@@ -5,11 +5,12 @@ package app
 //======================================================================================================================
 
 import javafx.scene.{effect => jfxe, paint => jfxp}
-import res.{Prop, Styles}
+import res.Prop
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property._
-import scalafx.scene.control._
+import scalafx.event.ActionEvent
+import scalafx.scene.control.Button
 import scalafx.scene.effect.ColorInput
 import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.layout._
@@ -71,9 +72,12 @@ object Test extends JFXApp {
         val pickerProp = new ObjectProperty[jfxp.Color](app, propName, Color.White)
         val effectProp = new ObjectProperty[jfxe.Effect](app, propName, defaultEffect)
 
-        val picker: ColorPicker = new ColorPicker(Color.White) {
+        val picker: ColorChooser = new ColorChooser() {
             pickerProp <== value
+            styleClass.add("panel-style")
         }
+
+        picker.requestLayout()
 
         imageView.effect <== effectProp
 
@@ -88,10 +92,27 @@ object Test extends JFXApp {
         }
 
         scene = new Scene(Prop.resolution._1, Prop.resolution._2) {
+            stylesheets.add("styles.css")
             root = new BorderPane() {
-                center = imageView
-                top = picker
-                style = Styles.backgroundStyle
+                center = new Pane() {
+                    children = Seq(
+                        imageView,
+                        new ColorPalette() {
+                            styleClass.add("panel-style")
+                        }
+                    )
+                }
+                top = new HBox() {
+                    children = Seq(
+                        picker,
+                        new Button("Blep") {
+                            onAction = { _: ActionEvent =>
+                                picker.value = Color.DarkBlue
+                            }
+                        },
+                    )
+                }
+                styleClass.add("background-style")
             }
         }
     }

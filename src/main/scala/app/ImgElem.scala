@@ -1,12 +1,12 @@
 package app
 
+import javafx.scene.{effect => jfxe}
 import res.{Prop, Res}
 import scalafx.beans.property.ObjectProperty
 import scalafx.geometry.Pos
 import scalafx.scene.CacheHint
-import scalafx.scene.image.{Image, ImageView}
-import javafx.scene.{effect => jfxe}
 import scalafx.scene.effect.ColorInput
+import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.layout.Pane
 import scalafx.scene.paint.Color
 
