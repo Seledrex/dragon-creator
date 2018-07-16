@@ -14,6 +14,18 @@ object Prop {
     final val imgResStr = "1024×576"
     final val padding: Int = 5
 
+    // Default panel locations
+    final val optionPanelX = 250
+    final val optionPanelY = 0
+    final val textPanelX = 5
+    final val textPanelY = 349
+    final val imagePanelX = 395
+    final val imagePanelY = 0
+    final val colorChooserPanelX = 5
+    final val colorChooserPanelY = 0
+    final val colorPalettePanelX = 27
+    final val colorPalettePanelY = 296
+
     // Widths
     final val pickerWidth: Int = 125
     final val buttonWidth: Int = 85

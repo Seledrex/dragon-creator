@@ -236,9 +236,11 @@ object App extends JFXApp {
                         val panelResetButton: Button = new Button(Prop.resetButton) {
                             prefWidth = Prop.buttonWidth
                             onAction = (_: ActionEvent) => {
-                                optionPanel.relocate(Prop.padding, 0)
-                                textPanel.relocate(150, 0)
-                                imagePanel.relocate(470, 0)
+                                optionPanel.relocate(Prop.optionPanelX, Prop.optionPanelY)
+                                textPanel.relocate(Prop.textPanelX, Prop.textPanelY)
+                                imagePanel.relocate(Prop.imagePanelX, Prop.imagePanelY)
+                                colorChooserPanel.relocate(Prop.colorChooserPanelX, Prop.colorChooserPanelY)
+                                colorPalettePanel.relocate(Prop.colorPalettePanelX, Prop.colorPalettePanelY)
                                 resProp.value = Prop.imgResStr
                             }
                         }
@@ -282,11 +284,11 @@ object App extends JFXApp {
 
         // Create a pane that holds multiple panels
         val panelsPane: Pane = new Pane() {
-            optionPanel.relocate(Prop.padding, 0)
-            textPanel.relocate(150, 0)
-            imagePanel.relocate(470, 0)
-            colorChooserPanel.relocate(Prop.padding, 365)
-            colorPalettePanel.relocate(Prop.padding, 669)
+            optionPanel.relocate(Prop.optionPanelX, Prop.optionPanelY)
+            textPanel.relocate(Prop.textPanelX, Prop.textPanelY)
+            imagePanel.relocate(Prop.imagePanelX, Prop.imagePanelY)
+            colorChooserPanel.relocate(Prop.colorChooserPanelX, Prop.colorChooserPanelY)
+            colorPalettePanel.relocate(Prop.colorPalettePanelX, Prop.colorPalettePanelY)
             children = Seq(imagePanel, textPanel, colorChooserPanel, colorPalettePanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
@@ -956,6 +958,8 @@ object App extends JFXApp {
                     if (dragModeProp()) {
                         me.eventType match {
                             case MouseEvent.MousePressed =>
+                                val bounds = node.localToScene(node.getBoundsInLocal)
+                                //println(s"bounds.getMinX: ${bounds.getMinX}, bounds.getMinY: ${bounds.getMinY - 51}")
                                 dragContext.mouseAnchorX = me.x
                                 dragContext.mouseAnchorY = me.y
                                 dragContext.initialTranslateX = node.translateX()
