@@ -50,6 +50,7 @@ object Prop {
     final val resetButton = "Reset"
     final val titleFontButton = "Title Font"
     final val bodyFontButton = "Body Font"
+    final val applyColorButton = "Apply Color"
 
     // Alerts and dialogs
     final val alertConfirm = "Confirm New File"

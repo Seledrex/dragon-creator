@@ -113,6 +113,15 @@ object App extends JFXApp {
     // Set initial visibility
     imgList.foreach(x => x._3._1.find(img => img.name == x._3._2.get).get.visible(true))
 
+    // Color Chooser and Color Palette
+    private val colorChooser: ColorChooser = new ColorChooser() {
+        styleClass.add("panel-style")
+    }
+
+    private val colorPalette: ColorPalette = new ColorPalette() {
+        styleClass.add("panel-style")
+    }
+
     //==================================================================================================================
     // Property Listeners
     //==================================================================================================================
@@ -211,14 +220,6 @@ object App extends JFXApp {
         val optionPanel: Node = makeDraggable(createOptionsPanel())
         val imagePanel: Node = makeDraggable(createImagePanel())
         val textPanel: Node = makeDraggable(createTextPanel())
-
-        val colorChooser: ColorChooser = new ColorChooser() {
-            styleClass.add("panel-style")
-        }
-
-        val colorPalette: ColorPalette = new ColorPalette() {
-            styleClass.add("panel-style")
-        }
 
         colorChooser.value <==> colorPalette.value
 
@@ -333,22 +334,22 @@ object App extends JFXApp {
             }
 
             // Create color picker
-            val cp: ColorPicker = new ColorPicker(props._2.value) {
+            val button: Button = new Button(Prop.applyColorButton) {
                 prefWidth = Prop.pickerWidth
+                onAction = { _: ActionEvent =>
+                    props._2.value = colorChooser.value.value
+                }
             }
 
             // Bind combo box property to value
             props._1 <==> cb.value
-
-            // Bind color picker property to value
-            props._2 <==> cp.value
 
             // Organize vertically
             new VBox(Prop.padding) {
                 children = Seq(
                     new Label(label),
                     cb,
-                    cp
+                    button
                 )
             }
         }
@@ -358,16 +359,17 @@ object App extends JFXApp {
           * @return Node.
           */
         def createBackgroundControl: Node = {
-            val cp: ColorPicker = new ColorPicker(Prop.defaultColor) {
+            val button: Button = new Button(Prop.applyColorButton) {
                 prefWidth = Prop.pickerWidth
+                onAction = { _: ActionEvent =>
+                    backgroundCPProp.value = colorChooser.value.value
+                }
             }
-
-            backgroundCPProp <==> cp.value
 
             new VBox(Prop.padding) {
                 children = Seq(
                     new Label(backgroundImg.name),
-                    cp
+                    button
                 )
             }
         }
@@ -518,9 +520,11 @@ object App extends JFXApp {
                 },
                 new HBox(Prop.padding) {
                     children = Seq(
-                        new ColorPicker(Color.Black) {
+                        new Button(Prop.applyColorButton) {
                             prefWidth = Prop.textAreaWidth - Prop.pickerWidth - 5
-                            textCPProp <==> value
+                            onAction = { _: ActionEvent =>
+                                textCPProp.value = colorChooser.value.value
+                            }
                         },
                         new Button(Prop.bodyFontButton) {
                             prefWidth = Prop.pickerWidth
