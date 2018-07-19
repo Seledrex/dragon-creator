@@ -1,9 +1,10 @@
-package app
+package test
 
 //======================================================================================================================
 // Imports
 //======================================================================================================================
 
+import app.{ColorChooser, ColorPalette}
 import javafx.scene.{effect => jfxe, paint => jfxp}
 import res.Prop
 import scalafx.Includes._
@@ -25,7 +26,7 @@ import scalafx.scene.{CacheHint, Scene}
   * Dragon Creator ScalaFX application.
   * @author Seledrex, Sanuthem
   */
-object Test extends JFXApp {
+object TestColorChooser extends JFXApp {
 
     //==================================================================================================================
     // Application Variables
