@@ -5,7 +5,7 @@ package res
   */
 object Res {
 
-    final class Resource(val name: String, val fill: String, val border: String)
+    final class Resource(val name: String, val fill: String, val outline: String)
 
     final val background = new Resource(
         "Background",
@@ -46,5 +46,11 @@ object Res {
         "Square",
         "bottom_square_fill.png",
         "bottom_square_border.png")
+
+    final val horn1 = new Resource(
+        "Horn 1",
+        "horn_1_fill.png",
+        "horn_1_lines.png"
+    )
 
 }

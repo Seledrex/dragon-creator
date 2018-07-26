@@ -36,7 +36,7 @@ class ImgElem(val resource: Res.Resource) {
     }
 
     // Border image
-    var borderImg: ImageView = new ImageView(image = new Image(resource.border)) {
+    var borderImg: ImageView = new ImageView(image = new Image(resource.outline)) {
         fitWidth = Prop.imgRes._1
         fitHeight = Prop.imgRes._2
         visible = false
