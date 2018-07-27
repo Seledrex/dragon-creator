@@ -4,9 +4,8 @@ package test
 // Imports
 //======================================================================================================================
 
-import app.{ColorChooser, ColorPalette}
+import app.{ColorChooser, ColorPalette, Properties}
 import javafx.scene.{effect => jfxe, paint => jfxp}
-import res.Properties
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property._
@@ -92,8 +91,8 @@ object TestColorChooser extends JFXApp {
             )
         }
 
-        scene = new Scene(Properties.resolution._1, Properties.resolution._2) {
-            stylesheets.add("styles.css")
+        scene = new Scene(Properties.Resolution._1, Properties.Resolution._2) {
+            stylesheets.add("css/styles.css")
             root = new BorderPane() {
                 center = new Pane() {
                     children = Seq(

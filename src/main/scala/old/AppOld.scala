@@ -11,7 +11,7 @@ import javafx.scene.{layout => jfxl, paint => jfxp, text => jfxt}
 import javax.imageio.ImageIO
 import org.apache.commons.io.FilenameUtils
 import org.controlsfx.dialog.FontSelectorDialog
-import res.{Properties, Res}
+import res.Res
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property._
@@ -55,44 +55,38 @@ object AppOld extends JFXApp {
     // Properties
     private val madeChangesProp = new BooleanProperty(bean, propName, false)
     private val dragModeProp = new BooleanProperty(bean, propName, false)
-    private val statusProp = new StringProperty(bean, propName, Properties.statusLabel)
-    private val resProp = new StringProperty(bean, propName, Properties.imgResStr)
+    private val statusProp = new StringProperty(bean, propName, PropertiesOld.statusLabel)
+    private val resProp = new StringProperty(bean, propName, PropertiesOld.imgResStr)
 
     // Base
-    private val baseCBProp = new StringProperty(bean, propName, Res.baseSquare.name)
+    private val baseCBProp = new StringProperty(bean, propName, "")
     private val baseCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.White)
     private val baseSet: Set[ImgElem] =
-        Set(new ImgElem(Res.baseSquare),
-            new ImgElem(Res.baseCircle),
-            new ImgElem(Res.baseDragon))
+        Set(new ImgElem(Res.baseDragon))
 
     // Top
-    private val topCBProp = new StringProperty(bean, propName, Res.topSquare.name)
+    private val topCBProp = new StringProperty(bean, propName, "")
     private val topCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.White)
-    private val topSet: Set[ImgElem] =
-        Set(new ImgElem(Res.topSquare),
-            new ImgElem(Res.topCircle))
+    private val topSet: Set[ImgElem] = Set.empty
 
     // Bottom
-    private val bottomCBProp = new StringProperty(bean, propName, Res.bottomSquare.name)
+    private val bottomCBProp = new StringProperty(bean, propName, "")
     private val bottomCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.White)
-    private val bottomSet: Set[ImgElem] =
-        Set(new ImgElem(Res.bottomSquare),
-            new ImgElem(Res.bottomCircle))
+    private val bottomSet: Set[ImgElem] = Set.empty
 
     // Background
-    private val backgroundCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.web(Properties.defaultColor))
+    private val backgroundCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.web(PropertiesOld.defaultColor))
     private val backgroundFillProp = new ObjectProperty[jfxl.Background](bean, propName,
-        new jfxl.Background(new BackgroundFill(Color.web(Properties.defaultColor), CornerRadii.Empty, Insets.Empty)))
-    private val backgroundImg = new ImgElem(Res.background)
+        new jfxl.Background(new BackgroundFill(Color.web(PropertiesOld.defaultColor), CornerRadii.Empty, Insets.Empty)))
+    private val backgroundImg = new ImgElem(Res.baseDragon)
 
     // Text
     private val titleFontScaleProp = new ObjectProperty[jfxt.Font](bean, propName,
-        adjustFontSize(Properties.getDefaultTitleFont, Properties.getScaleFactor(Properties.imgResStr)))
-    private val titleFPProp = new ObjectProperty[jfxt.Font](bean, propName, Properties.getDefaultTitleFont)
+        adjustFontSize(PropertiesOld.getDefaultTitleFont, PropertiesOld.getScaleFactor(PropertiesOld.imgResStr)))
+    private val titleFPProp = new ObjectProperty[jfxt.Font](bean, propName, PropertiesOld.getDefaultTitleFont)
     private val bodyFontScaleProp = new ObjectProperty[jfxt.Font](bean, propName,
-        adjustFontSize(Properties.getDefaultBodyFont, Properties.getScaleFactor(Properties.imgResStr)))
-    private val bodyFPProp = new ObjectProperty[jfxt.Font](bean, propName, Properties.getDefaultBodyFont)
+        adjustFontSize(PropertiesOld.getDefaultBodyFont, PropertiesOld.getScaleFactor(PropertiesOld.imgResStr)))
+    private val bodyFPProp = new ObjectProperty[jfxt.Font](bean, propName, PropertiesOld.getDefaultBodyFont)
     private val titleTextProp = new StringProperty(bean, propName, "")
     private val bodyTextProp = new StringProperty(bean, propName, "")
     private val textCPProp = new ObjectProperty[jfxp.Color](bean, propName, Color.Black)
@@ -101,14 +95,14 @@ object AppOld extends JFXApp {
     // Put all sets into a list
     private val imgList: List[(String, Seq[String], (Set[ImgElem], StringProperty, ObjectProperty[jfxp.Color]))] =
         List(
-            (Properties.bottomLabel,
-                Seq(Res.bottomSquare.name, Res.bottomCircle.name, Properties.noneOption),
+            (PropertiesOld.bottomLabel,
+                Seq("", "", PropertiesOld.noneOption),
                 (bottomSet, bottomCBProp, bottomCPProp)),
-            (Properties.baseLabel,
-                Seq(Res.baseSquare.name, Res.baseCircle.name, Res.baseDragon.name),
+            (PropertiesOld.baseLabel,
+                Seq("", "", Res.baseDragon.name),
                 (baseSet, baseCBProp, baseCPProp)),
-            (Properties.topLabel,
-                Seq(Res.topSquare.name, Res.topCircle.name, Properties.noneOption),
+            (PropertiesOld.topLabel,
+                Seq("", "", PropertiesOld.noneOption),
                 (topSet, topCBProp, topCPProp)))
 
     // Set initial visibility
@@ -129,9 +123,9 @@ object AppOld extends JFXApp {
 
     // Combo box change listeners
     imgList.foreach(x => x._3._2.onChange { (_, oldValue, newValue) =>
-        if (newValue == Properties.noneOption) {
+        if (newValue == PropertiesOld.noneOption) {
             x._3._1.find(img => img.name == oldValue).get.visible(false)
-        } else if (oldValue == Properties.noneOption) {
+        } else if (oldValue == PropertiesOld.noneOption) {
             x._3._1.find(img => img.name == newValue).get.visible(true)
         } else {
             x._3._1.find(img => img.name == oldValue).get.visible(false)
@@ -161,13 +155,13 @@ object AppOld extends JFXApp {
             if (saveFile != null) {
                 statusProp.value = FilenameUtils.getBaseName(saveFile.getName) + "*"
             } else {
-                statusProp.value = Properties.statusLabel + "*"
+                statusProp.value = PropertiesOld.statusLabel + "*"
             }
         } else if (oldValue == true && !madeChange) {
             if (saveFile != null) {
                 statusProp.value = FilenameUtils.getBaseName(saveFile.getName)
             } else {
-                statusProp.value = Properties.statusLabel
+                statusProp.value = PropertiesOld.statusLabel
             }
         }
     }
@@ -176,8 +170,8 @@ object AppOld extends JFXApp {
     resProp.onChange { (_, _, newValue) => {
         imgList.foreach(x => x._3._1.foreach(img => img.changeSize(convertRes(newValue))))
         backgroundImg.changeSize(convertRes(newValue))
-        titleFontScaleProp.value = adjustFontSize(titleFPProp.value, Properties.getScaleFactor(resProp.value))
-        bodyFontScaleProp.value = adjustFontSize(bodyFPProp.value, Properties.getScaleFactor(resProp.value))
+        titleFontScaleProp.value = adjustFontSize(titleFPProp.value, PropertiesOld.getScaleFactor(resProp.value))
+        bodyFontScaleProp.value = adjustFontSize(bodyFPProp.value, PropertiesOld.getScaleFactor(resProp.value))
     }}
 
     // Text change listeners
@@ -192,12 +186,12 @@ object AppOld extends JFXApp {
 
     // Text font change listeners
     titleFPProp.onChange { (_, _, newValue) =>
-        titleFontScaleProp.value = adjustFontSize(newValue, Properties.getScaleFactor(resProp.value))
+        titleFontScaleProp.value = adjustFontSize(newValue, PropertiesOld.getScaleFactor(resProp.value))
         madeChangesProp.value = true
     }
 
     bodyFPProp.onChange { (_, _, newValue) =>
-        bodyFontScaleProp.value = adjustFontSize(newValue, Properties.getScaleFactor(resProp.value))
+        bodyFontScaleProp.value = adjustFontSize(newValue, PropertiesOld.getScaleFactor(resProp.value))
         madeChangesProp.value = true
     }
 
@@ -212,7 +206,7 @@ object AppOld extends JFXApp {
     stage = new JFXApp.PrimaryStage() {
 
         // Set parameters
-        title = Properties.Title
+        title = PropertiesOld.Title
         resizable = true
         maximized = true
 
@@ -229,34 +223,34 @@ object AppOld extends JFXApp {
 
         // Make window panel
         val windowPanel: Node = new Pane() {
-            margin = Insets(Properties.padding)
-            children = new HBox(Properties.padding) {
+            margin = Insets(PropertiesOld.padding)
+            children = new HBox(PropertiesOld.padding) {
                 children = Seq(
                     filePanel,
-                    new HBox(Properties.padding) {
+                    new HBox(PropertiesOld.padding) {
                         // Reset button
-                        val panelResetButton: Button = new Button(Properties.resetButton) {
-                            prefWidth = Properties.buttonWidth
+                        val panelResetButton: Button = new Button(PropertiesOld.resetButton) {
+                            prefWidth = PropertiesOld.buttonWidth
                             onAction = (_: ActionEvent) => {
-                                optionPanel.relocate(Properties.optionPanelX, Properties.optionPanelY)
-                                textPanel.relocate(Properties.textPanelX, Properties.textPanelY)
-                                imagePanel.relocate(Properties.imagePanelX, Properties.imagePanelY)
-                                colorChooserPanel.relocate(Properties.colorChooserPanelX, Properties.colorChooserPanelY)
-                                colorPalettePanel.relocate(Properties.colorPalettePanelX, Properties.colorPalettePanelY)
-                                resProp.value = Properties.imgResStr
+                                optionPanel.relocate(PropertiesOld.optionPanelX, PropertiesOld.optionPanelY)
+                                textPanel.relocate(PropertiesOld.textPanelX, PropertiesOld.textPanelY)
+                                imagePanel.relocate(PropertiesOld.imagePanelX, PropertiesOld.imagePanelY)
+                                colorChooserPanel.relocate(PropertiesOld.colorChooserPanelX, PropertiesOld.colorChooserPanelY)
+                                colorPalettePanel.relocate(PropertiesOld.colorPalettePanelX, PropertiesOld.colorPalettePanelY)
+                                resProp.value = PropertiesOld.imgResStr
                             }
                         }
 
                         // Resolution combo box
-                        val imgResComboBox: ComboBox[String] = new ComboBox(Properties.resOptions) {
-                            value = Properties.imgResStr
+                        val imgResComboBox: ComboBox[String] = new ComboBox(PropertiesOld.resOptions) {
+                            value = PropertiesOld.imgResStr
                             prefWidth = 105
                         }
 
                         // Create a checkbox to toggle drag mode
-                        val dragModeCheckbox: CheckBox = new CheckBox(Properties.dragModeCheckBoxName) {
+                        val dragModeCheckbox: CheckBox = new CheckBox(PropertiesOld.dragModeCheckBoxName) {
                             selected = dragModeProp()
-                            prefWidth = Properties.buttonWidth
+                            prefWidth = PropertiesOld.buttonWidth
                         }
 
                         // Bind properties
@@ -269,8 +263,8 @@ object AppOld extends JFXApp {
                     },
                     new StackPane() {
                         // Status label
-                        val status: Label = new Label(Properties.statusLabel) {
-                            prefWidth = Properties.pickerWidth
+                        val status: Label = new Label(PropertiesOld.statusLabel) {
+                            prefWidth = PropertiesOld.pickerWidth
                             alignmentInParent = Pos.Center
                             alignment = Pos.Center
                         }
@@ -286,18 +280,18 @@ object AppOld extends JFXApp {
 
         // Create a pane that holds multiple panels
         val panelsPane: Pane = new Pane() {
-            optionPanel.relocate(Properties.optionPanelX, Properties.optionPanelY)
-            textPanel.relocate(Properties.textPanelX, Properties.textPanelY)
-            imagePanel.relocate(Properties.imagePanelX, Properties.imagePanelY)
-            colorChooserPanel.relocate(Properties.colorChooserPanelX, Properties.colorChooserPanelY)
-            colorPalettePanel.relocate(Properties.colorPalettePanelX, Properties.colorPalettePanelY)
+            optionPanel.relocate(PropertiesOld.optionPanelX, PropertiesOld.optionPanelY)
+            textPanel.relocate(PropertiesOld.textPanelX, PropertiesOld.textPanelY)
+            imagePanel.relocate(PropertiesOld.imagePanelX, PropertiesOld.imagePanelY)
+            colorChooserPanel.relocate(PropertiesOld.colorChooserPanelX, PropertiesOld.colorChooserPanelY)
+            colorPalettePanel.relocate(PropertiesOld.colorPalettePanelX, PropertiesOld.colorPalettePanelY)
             children = Seq(imagePanel, textPanel, colorChooserPanel, colorPalettePanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
 
         // Create scene containing all elements and proper resolution
-        scene = new Scene(Properties.resolution._1, Properties.resolution._2) {
-            stylesheets.add("styles.css")
+        scene = new Scene(PropertiesOld.Resolution._1, PropertiesOld.Resolution._2) {
+            stylesheets.add("css/styles.css")
             root = new BorderPane() {
                 center = panelsPane
                 top = windowPanel
@@ -331,12 +325,12 @@ object AppOld extends JFXApp {
             // Create combo box
             val cb: ComboBox[String] = new ComboBox(options) {
                 value = props._1.get
-                prefWidth = Properties.pickerWidth
+                prefWidth = PropertiesOld.pickerWidth
             }
 
             // Create color picker
-            val button: Button = new Button(Properties.applyColorButton) {
-                prefWidth = Properties.pickerWidth
+            val button: Button = new Button(PropertiesOld.applyColorButton) {
+                prefWidth = PropertiesOld.pickerWidth
                 onAction = { _: ActionEvent =>
                     props._2.value = colorChooser.value.value
                 }
@@ -346,7 +340,7 @@ object AppOld extends JFXApp {
             props._1 <==> cb.value
 
             // Organize vertically
-            new VBox(Properties.padding) {
+            new VBox(PropertiesOld.padding) {
                 children = Seq(
                     new Label(label),
                     cb,
@@ -360,14 +354,14 @@ object AppOld extends JFXApp {
           * @return Node.
           */
         def createBackgroundControl: Node = {
-            val button: Button = new Button(Properties.applyColorButton) {
-                prefWidth = Properties.pickerWidth
+            val button: Button = new Button(PropertiesOld.applyColorButton) {
+                prefWidth = PropertiesOld.pickerWidth
                 onAction = { _: ActionEvent =>
                     backgroundCPProp.value = colorChooser.value.value
                 }
             }
 
-            new VBox(Properties.padding) {
+            new VBox(PropertiesOld.padding) {
                 children = Seq(
                     new Label(backgroundImg.name),
                     button
@@ -376,7 +370,7 @@ object AppOld extends JFXApp {
         }
 
         // Add all layer controls to panel
-        new VBox(Properties.padding) {
+        new VBox(PropertiesOld.padding) {
             children = imgList.reverse.map(x => createLayerControl(x._1, x._2, (x._3._2, x._3._3))) ++
                 Seq(createBackgroundControl)
             styleClass.add("panel-style")
@@ -420,40 +414,40 @@ object AppOld extends JFXApp {
       * @return Node.
       */
     private def createFilePanel(): HBox = {
-        new HBox(Properties.padding) {
+        new HBox(PropertiesOld.padding) {
             children = Seq(
-                new Button(Properties.newButton) {
-                    prefWidth = Properties.buttonWidth
+                new Button(PropertiesOld.newButton) {
+                    prefWidth = PropertiesOld.buttonWidth
                     onAction = (_: ActionEvent) => {
                         loadRawrFile(true)
                     }
                 },
-                new Button(Properties.openButton) {
-                    prefWidth = Properties.buttonWidth
+                new Button(PropertiesOld.openButton) {
+                    prefWidth = PropertiesOld.buttonWidth
                     onAction = (_: ActionEvent) => {
                         loadRawrFile(false)
                     }
                 },
-                new Button(Properties.saveButton) {
-                    prefWidth = Properties.buttonWidth
+                new Button(PropertiesOld.saveButton) {
+                    prefWidth = PropertiesOld.buttonWidth
                     onAction = (_: ActionEvent) => {
                         saveRawrFile(false)
                     }
                 },
-                new Button(Properties.saveAsButton) {
-                    prefWidth = Properties.buttonWidth
+                new Button(PropertiesOld.saveAsButton) {
+                    prefWidth = PropertiesOld.buttonWidth
                     onAction = (_: ActionEvent) => {
                         saveRawrFile(true)
                     }
                 },
-                new Button(Properties.saveImageButton) {
-                    prefWidth = Properties.buttonWidth
+                new Button(PropertiesOld.saveImageButton) {
+                    prefWidth = PropertiesOld.buttonWidth
                     onAction = (_: ActionEvent) => {
                         saveImage()
                     }
                 },
-                new Button(Properties.quitButton) {
-                    prefWidth = Properties.buttonWidth
+                new Button(PropertiesOld.quitButton) {
+                    prefWidth = PropertiesOld.buttonWidth
                     onAction = (_: ActionEvent) => {
                         quit()
                     }
@@ -468,15 +462,15 @@ object AppOld extends JFXApp {
       * @return Node.
       */
     private def createTextPanel(): Node = {
-        new VBox(Properties.padding) {
+        new VBox(PropertiesOld.padding) {
             children = Seq(
-                new HBox(Properties.padding) {
+                new HBox(PropertiesOld.padding) {
                     children = Seq(
                         new TextField() {
-                            promptText = Properties.titlePrompt
-                            prefWidth = Properties.textAreaWidth - Properties.pickerWidth - 5
+                            promptText = PropertiesOld.titlePrompt
+                            prefWidth = PropertiesOld.textAreaWidth - PropertiesOld.pickerWidth - 5
                             textFormatter = new TextFormatter[String]( {change: Change =>
-                                val maxLen: Int = Properties.titleMaxLen
+                                val maxLen: Int = PropertiesOld.titleMaxLen
                                 if (change.controlNewText.length > maxLen) {
                                     change.text = ""
                                 }
@@ -486,12 +480,12 @@ object AppOld extends JFXApp {
                             })
                             titleTextProp <==> text
                         },
-                        new Button(Properties.titleFontButton) {
-                            prefWidth = Properties.pickerWidth
+                        new Button(PropertiesOld.titleFontButton) {
+                            prefWidth = PropertiesOld.pickerWidth
                             onAction = (_: ActionEvent) => {
                                 val fs = new FontSelectorDialog(titleFPProp.value) {
                                     initOwner(stage)
-                                    setTitle(Properties.dialogFontChooser)
+                                    setTitle(PropertiesOld.dialogFontChooser)
                                 }
                                 val f = fs.showAndWait()
                                 if (f.isPresent) {
@@ -502,10 +496,10 @@ object AppOld extends JFXApp {
                     )
                 },
                 new TextArea() {
-                    promptText = Properties.bodyPrompt
-                    prefWidth = Properties.textAreaWidth
+                    promptText = PropertiesOld.bodyPrompt
+                    prefWidth = PropertiesOld.textAreaWidth
                     textFormatter = new TextFormatter[String]( {change: Change =>
-                        val maxLen: Int = Properties.bodyMaxLen; val maxLines: Int = Properties.bodyMaxLines
+                        val maxLen: Int = PropertiesOld.bodyMaxLen; val maxLines: Int = PropertiesOld.bodyMaxLines
                         def makeChange(change: Change): Unit = {
                             change.text = ""
                             change.anchor = if (change.anchor > 0) change.anchor - 1 else 0
@@ -519,20 +513,20 @@ object AppOld extends JFXApp {
                     })
                     bodyTextProp <==> text
                 },
-                new HBox(Properties.padding) {
+                new HBox(PropertiesOld.padding) {
                     children = Seq(
-                        new Button(Properties.applyColorButton) {
-                            prefWidth = Properties.textAreaWidth - Properties.pickerWidth - 5
+                        new Button(PropertiesOld.applyColorButton) {
+                            prefWidth = PropertiesOld.textAreaWidth - PropertiesOld.pickerWidth - 5
                             onAction = { _: ActionEvent =>
                                 textCPProp.value = colorChooser.value.value
                             }
                         },
-                        new Button(Properties.bodyFontButton) {
-                            prefWidth = Properties.pickerWidth
+                        new Button(PropertiesOld.bodyFontButton) {
+                            prefWidth = PropertiesOld.pickerWidth
                             onAction = (_: ActionEvent) => {
                                 val fs = new FontSelectorDialog(bodyFPProp.value) {
                                     initOwner(stage)
-                                    setTitle(Properties.dialogFontChooser)
+                                    setTitle(PropertiesOld.dialogFontChooser)
                                 }
                                 val f = fs.showAndWait()
                                 if (f.isPresent) {
@@ -571,13 +565,13 @@ object AppOld extends JFXApp {
             })
 
             // Reset background
-            backgroundCPProp.value = Color.web(Properties.defaultColor)
+            backgroundCPProp.value = Color.web(PropertiesOld.defaultColor)
 
             // Reset text
             titleTextProp.value = ""
             bodyTextProp.value = ""
-            titleFPProp.value = Properties.getDefaultTitleFont
-            bodyFPProp.value = Properties.getDefaultBodyFont
+            titleFPProp.value = PropertiesOld.getDefaultTitleFont
+            bodyFPProp.value = PropertiesOld.getDefaultBodyFont
             textCPProp.value = Color.Black
 
             // Reset made changes
@@ -600,7 +594,7 @@ object AppOld extends JFXApp {
 
             // Create file chooser that only accepts rawr files
             val chooser = new FileChooser() {
-                title = Properties.fileChooserTitle
+                title = PropertiesOld.fileChooserTitle
                 extensionFilters.addAll(
                     new FileChooser.ExtensionFilter("RAWR", "*.rawr"))
             }
@@ -717,7 +711,7 @@ object AppOld extends JFXApp {
         // Open file chooser if necessary
         if (saveFile == null || saveAs) {
             val chooser = new FileChooser() {
-                title = Properties.fileChooserTitle
+                title = PropertiesOld.fileChooserTitle
                 extensionFilters.addAll(
                     new FileChooser.ExtensionFilter("RAWR", "*.rawr"))
             }
@@ -749,7 +743,7 @@ object AppOld extends JFXApp {
                 printWriter.write("TextColor=" + Util.colorToRGBCode(textCPProp.value) + "\n")
                 new Alert(AlertType.Information) {
                     initOwner(stage)
-                    title = Properties.alertSuccess
+                    title = PropertiesOld.alertSuccess
                     headerText = "Successfully saved file."
                     contentText = "The file was saved successfully to " + saveFile.getAbsolutePath
                 }.showAndWait()
@@ -769,9 +763,9 @@ object AppOld extends JFXApp {
     private def saveImage(): Unit = {
 
         // Create resolution choice dialog
-        val resChoiceDialog = new ChoiceDialog(defaultChoice = Properties.imgResStr, choices = Properties.resOptions) {
+        val resChoiceDialog = new ChoiceDialog(defaultChoice = PropertiesOld.imgResStr, choices = PropertiesOld.resOptions) {
             initOwner(stage)
-            title = Properties.dialogResChoice
+            title = PropertiesOld.dialogResChoice
             headerText = "Select the resolution to output to."
             contentText = "Resolution:"
         }
@@ -784,7 +778,7 @@ object AppOld extends JFXApp {
 
         // Create file chooser
         val chooser = new FileChooser() {
-            title = Properties.fileChooserTitle
+            title = PropertiesOld.fileChooserTitle
             extensionFilters.addAll(
                 new FileChooser.ExtensionFilter("PNG", "*.png"))
         }
@@ -801,7 +795,7 @@ object AppOld extends JFXApp {
             }
 
             def copyBackground(): Seq[Node] = {
-                Seq(new ImgElem(Res.background) {
+                Seq(new ImgElem(Res.baseDragon) {
                         visible(true)
                         changeColor(backgroundImg.color)
                         changeSize(convertRes(resChoice))
@@ -827,11 +821,11 @@ object AppOld extends JFXApp {
                 Seq(new VBox() {
                     children = Seq(
                         new Text(titleTextProp.value) {
-                            font = adjustFontSize(titleFPProp.value,  Properties.getScaleFactor(resChoice))
+                            font = adjustFontSize(titleFPProp.value,  PropertiesOld.getScaleFactor(resChoice))
                             fill = textFillProp.value
                         },
                         new Text(bodyTextProp.value) {
-                            font = adjustFontSize(bodyFPProp.value,  Properties.getScaleFactor(resChoice))
+                            font = adjustFontSize(bodyFPProp.value,  PropertiesOld.getScaleFactor(resChoice))
                             fill = textFillProp.value
                         }
                     )
@@ -857,7 +851,7 @@ object AppOld extends JFXApp {
                     file)
                 new Alert(AlertType.Information) {
                     initOwner(stage)
-                    title = Properties.alertSuccess
+                    title = PropertiesOld.alertSuccess
                     headerText = "Successfully saved image."
                     contentText = "The image was saved successfully to " + file.getAbsolutePath
                 }.showAndWait()
@@ -892,7 +886,7 @@ object AppOld extends JFXApp {
     private def createSaveChangesDialog(): Alert = {
         new Alert(AlertType.Confirmation) {
             initOwner(stage)
-            title = Properties.alertConfirm
+            title = PropertiesOld.alertConfirm
             headerText = "Would you like to save changes to the current file?"
             contentText = "You have made changes to " +
                 { if (saveFile == null) "an unsaved file" else FilenameUtils.getBaseName(saveFile.getName) } + "."
@@ -935,7 +929,7 @@ object AppOld extends JFXApp {
 
         new Alert(AlertType.Error) {
             initOwner(stage)
-            title = Properties.alertError
+            title = PropertiesOld.alertError
             headerText = header
             contentText = content
             dialogPane().expandableContent = expContent
@@ -1027,7 +1021,7 @@ object AppOld extends JFXApp {
     private def convertRes(resStr: String): (Double, Double) = {
         "([0-9]+)×([0-9]+)".r.findFirstMatchIn(resStr) match {
             case Some(res) => (res.subgroups.head.toDouble, res.subgroups(1).toDouble)
-            case None => Properties.imgRes
+            case None => PropertiesOld.imgRes
         }
     }
 

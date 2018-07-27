@@ -1,7 +1,7 @@
 package old
 
 import javafx.scene.{effect => jfxe}
-import res.{Properties, Res}
+import res.Res
 import scalafx.beans.property.ObjectProperty
 import scalafx.geometry.Pos
 import scalafx.scene.CacheHint
@@ -20,15 +20,15 @@ class ImgElem(val resource: Res.Resource) {
 
     // Clip image
     private val clipImg: ImageView = new ImageView(image = new Image(resource.fill)) {
-        fitWidth = Properties.imgRes._1
-        fitHeight = Properties.imgRes._2
+        fitWidth = PropertiesOld.imgRes._1
+        fitHeight = PropertiesOld.imgRes._2
         visible = false
     }
 
     // Fill image
     var fillImg: ImageView = new ImageView(image = new Image(resource.fill)) {
-        fitWidth = Properties.imgRes._1
-        fitHeight = Properties.imgRes._2
+        fitWidth = PropertiesOld.imgRes._1
+        fitHeight = PropertiesOld.imgRes._2
         visible = false
         clip = clipImg
         cache = true
@@ -37,8 +37,8 @@ class ImgElem(val resource: Res.Resource) {
 
     // Border image
     var borderImg: ImageView = new ImageView(image = new Image(resource.outline)) {
-        fitWidth = Properties.imgRes._1
-        fitHeight = Properties.imgRes._2
+        fitWidth = PropertiesOld.imgRes._1
+        fitHeight = PropertiesOld.imgRes._2
         visible = false
     }
 

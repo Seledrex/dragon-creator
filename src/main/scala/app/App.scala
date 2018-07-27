@@ -5,7 +5,7 @@ package app
 //======================================================================================================================
 
 import javafx.{scene => jfxs}
-import res.{Properties, Res}
+import res.Res
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
@@ -31,7 +31,7 @@ object App extends JFXApp {
 
   private val dragToolProp = new BooleanProperty(bean, propName, true)
   private val moveToolProp = new BooleanProperty(bean, propName, false)
-  private val resolutionProp = new StringProperty(bean, propName, Properties.imgResStr)
+  private val resolutionProp = new StringProperty(bean, propName, Properties.ResPropInit)
   private val layerProp = new ObjectProperty[jfxs.Group](bean, propName, null)
 
   //====================================================================================================================
@@ -40,10 +40,10 @@ object App extends JFXApp {
 
   private val creatorPane = new Pane() {
     styleClass.add("panel-style")
-    minWidth = Properties.getResTup(Properties.imgResStr)._1
-    maxWidth = Properties.getResTup(Properties.imgResStr)._1
-    minHeight = Properties.getResTup(Properties.imgResStr)._2
-    maxHeight = Properties.getResTup(Properties.imgResStr)._2
+    minWidth = Properties.getResTup(resolutionProp())._1
+    maxWidth = Properties.getResTup(resolutionProp())._1
+    minHeight = Properties.getResTup(resolutionProp())._2
+    maxHeight = Properties.getResTup(resolutionProp())._2
   }
 
   //====================================================================================================================
@@ -82,11 +82,11 @@ object App extends JFXApp {
     title = Properties.Title
     resizable = true
     maximized = true
-    minWidth = 1280
-    minHeight = 720
+    minWidth = Properties.Resolution._1
+    minHeight = Properties.Resolution._2
 
-    scene = new Scene(Properties.resolution._1, Properties.resolution._2) {
-      stylesheets.add("styles.css")
+    scene = new Scene(Properties.Resolution._1, Properties.Resolution._2) {
+      stylesheets.add("css/styles.css")
       root = new BorderPane() {
         center = new Pane() {
           alignmentInParent = Pos.TopLeft
@@ -99,7 +99,7 @@ object App extends JFXApp {
         top = new Pane() {
           alignmentInParent = Pos.TopLeft
           children = Seq(
-            new HBox(Properties.padding) {
+            new HBox(Properties.Padding) {
               styleClass.add("panel-style")
               children = Seq(
                 new Button("Add") {

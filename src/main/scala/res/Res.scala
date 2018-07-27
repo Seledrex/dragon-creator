@@ -7,50 +7,15 @@ object Res {
 
   final class Resource(val name: String, val fill: String, val outline: String)
 
-  final val background = new Resource(
-    "Background",
-    "background.png",
-    "transparent.png")
-
   final val baseDragon = new Resource(
     "Dragon",
-    "base_dragon_fill.png",
-    "base_dragon_border.png")
-
-  final val baseCircle = new Resource(
-    "Circle",
-    "base_circle_fill.png",
-    "base_circle_border.png")
-
-  final val baseSquare = new Resource(
-    "Square",
-    "base_square_fill.png",
-    "base_square_border.png")
-
-  final val topCircle = new Resource(
-    "Circle",
-    "top_circle_fill.png",
-    "top_circle_border.png")
-
-  final val topSquare = new Resource(
-    "Square",
-    "top_square_fill.png",
-    "top_square_border.png")
-
-  final val bottomCircle = new Resource(
-    "Circle",
-    "bottom_circle_fill.png",
-    "bottom_circle_border.png")
-
-  final val bottomSquare = new Resource(
-    "Square",
-    "bottom_square_fill.png",
-    "bottom_square_border.png")
+    "bases/western1/western1_fill.png",
+    "bases/western1/western1_outline.png")
 
   final val horn1 = new Resource(
     "Horn 1",
-    "horn_1_fill.png",
-    "horn_1_lines.png"
+    "horns/horn1/horn1_fill.png",
+    "horns/horn1/horn1_outline.png"
   )
 
 }

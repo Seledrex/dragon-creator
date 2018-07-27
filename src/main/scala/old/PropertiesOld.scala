@@ -1,4 +1,4 @@
-package res
+package old
 
 import javafx.scene.{text => jfxt}
 import scalafx.scene.text.Font
@@ -6,11 +6,11 @@ import scalafx.scene.text.Font
 /**
   * Important properties defined here.
   */
-object Properties {
+object PropertiesOld {
 
   final val Title: String = "Dragon Creator"
-  final val resolution: (Double, Double) = (1280, 720)
-  final val imgRes: (Double, Double) = (resolution._1 / 1.25, resolution._2 / 1.25)
+  final val Resolution: (Double, Double) = (1280, 720)
+  final val imgRes: (Double, Double) = (Resolution._1 / 1.25, Resolution._2 / 1.25)
   final val imgResStr = "1024×576"
   final val padding: Int = 5
 
