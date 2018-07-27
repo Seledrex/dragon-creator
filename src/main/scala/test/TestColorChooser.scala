@@ -6,7 +6,7 @@ package test
 
 import app.{ColorChooser, ColorPalette}
 import javafx.scene.{effect => jfxe, paint => jfxp}
-import res.Prop
+import res.Properties
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property._
@@ -45,7 +45,7 @@ object TestColorChooser extends JFXApp {
       */
     stage = new JFXApp.PrimaryStage() {
 
-        title = Prop.title
+        title = Properties.Title
         resizable = true
         maximized = true
 
@@ -92,7 +92,7 @@ object TestColorChooser extends JFXApp {
             )
         }
 
-        scene = new Scene(Prop.resolution._1, Prop.resolution._2) {
+        scene = new Scene(Properties.resolution._1, Properties.resolution._2) {
             stylesheets.add("styles.css")
             root = new BorderPane() {
                 center = new Pane() {
