@@ -1,0 +1,14 @@
+.color-palette {
+    -fx-min-width: 16.666667em;
+    -fx-min-height: 4.0em;
+    -fx-pref-height: 4.0em;
+}
+
+.color-swatch {
+    -fx-min-width: 16;
+    -fx-min-height: 16;
+    -fx-max-width: 16;
+    -fx-max-height: 16;
+    -fx-pref-width: 16;
+    -fx-pref-height: 16;
+}

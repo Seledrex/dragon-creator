@@ -1,18 +1,3 @@
-.background-style {
-    -fx-background-color: #99baef;
-}
-
-.panel-style {
-    -fx-background-color: #f2f2f2;
-    -fx-border-color: black;
-    -fx-border-width: 2;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-padding: 6;
-    -fx-font-size: 9pt;
-    -fx-font-family: Helvetica;
-}
-
 .my-custom-color {
     -fx-background-color: derive(#ececec,26.4%);
     -fx-padding: 1.25em;
@@ -77,19 +62,4 @@
     -fx-pref-width: 10.666667em;
     -fx-pref-height: 1.75em;
     -fx-border-color: derive(#ececec, -20%);
-}
-
-.color-palette {
-    -fx-min-width: 16.666667em;
-    -fx-min-height: 4.0em;
-    -fx-pref-height: 4.0em;
-}
-
-.color-swatch {
-    -fx-min-width: 16;
-    -fx-min-height: 16;
-    -fx-max-width: 16;
-    -fx-max-height: 16;
-    -fx-pref-width: 16;
-    -fx-pref-height: 16;
 }

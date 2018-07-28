@@ -4,8 +4,9 @@ package app
 // Imports
 //======================================================================================================================
 
-import javafx.scene.{effect => jfxe, layout => jfxl}
+import javafx.scene.{effect => jfxe, layout => jfxl, paint => jfxp}
 import res.Res
+import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
 import scalafx.scene.CacheHint
 import scalafx.scene.effect.ColorInput
@@ -18,11 +19,15 @@ import scalafx.scene.paint.Color
 
 class ImageLayer(val resource: Res.Resource) extends jfxl.Pane {
 
+  private final val bean = this
+  private final val propName = null
+
   //====================================================================================================================
   // Variable Definitions
   //====================================================================================================================
 
   private final val DefaultColor: Color = Color.White
+  private val colorProperty = new ObjectProperty[jfxp.Color](bean, propName, DefaultColor)
 
   private val fillImg = new Image(resource.fill)
   private val outlineImg = new Image(resource.outline)
@@ -38,25 +43,27 @@ class ImageLayer(val resource: Res.Resource) extends jfxl.Pane {
     new ColorInput(0, 0, fillImg.getWidth.toInt, fillImg.getHeight.toInt, DefaultColor)
   )
 
-  var color: Color = DefaultColor
-
   //====================================================================================================================
   // Construction
   //====================================================================================================================
 
   fillView.clip = clipView
   fillView.effect <== effectProp
+  colorProperty.onChange { (_, _, newColor) =>
+    effectProp.value = new ColorInput(
+      0, 0, fillImg.getWidth.toInt, fillImg.getHeight.toInt, newColor
+    )
+  }
   getChildren.addAll(fillView, outlineView)
 
   //====================================================================================================================
   // Public methods
   //====================================================================================================================
 
-  def changeColor(color: Color): Unit = {
-    effectProp.value = new ColorInput(
-      0, 0, fillImg.getWidth.toInt, fillImg.getHeight.toInt, color
-    )
-    this.color = color
+  def color: ObjectProperty[jfxp.Color] = colorProperty
+
+  def color_=(newColor: Color): Unit = {
+    color() = newColor
   }
 
   def changeSize(scaleFactor: Double): Unit = {

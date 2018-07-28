@@ -20,16 +20,16 @@ object Properties {
   final val optionPanelY = 0
   final val textPanelX = 5
   final val textPanelY = 349
-  final val imagePanelX = 395
-  final val imagePanelY = 0
-  final val colorChooserPanelX = 5
-  final val colorChooserPanelY = 0
-  final val colorPalettePanelX = 27
-  final val colorPalettePanelY = 296
+  final val CreatorPaneX = 395
+  final val CreatorPaneY = 0
+  final val ColorChooserPaneX = 5
+  final val ColorChooserPaneY = 0
+  final val ColorPalettePaneX = 27
+  final val ColorPalettePaneY = 296
 
   // Widths
   final val pickerWidth: Int = 125
-  final val buttonWidth: Int = 85
+  final val ButtonWidth: Int = 85
   final val textAreaWidth: Int = 300
 
   // Check mark label
@@ -39,19 +39,23 @@ object Properties {
   final val baseLabel = "Base"
   final val topLabel = "Top"
   final val bottomLabel = "Bottom"
-  final val statusLabel = "Untitled"
+  final val StatusLabel = "Untitled"
 
   // Button names
-  final val newButton = "New"
-  final val openButton = "Open"
-  final val saveButton = "Save"
-  final val saveAsButton = "Save As..."
-  final val saveImageButton = "Save Image..."
-  final val quitButton = "Quit"
-  final val resetButton = "Reset"
+  final val NewButton = "New"
+  final val OpenButton = "Open"
+  final val SaveButton = "Save"
+  final val SaveAsButton = "Save As..."
+  final val SaveImageButton = "Save Image..."
+  final val QuitButton = "Quit"
+  final val ResetButton = "Reset"
   final val titleFontButton = "Title Font"
   final val bodyFontButton = "Body Font"
   final val applyColorButton = "Apply Color"
+
+  // Tool names
+  final val DragTool = "Drag Tool"
+  final val MoveTool = "Move Tool"
 
   // Alerts and dialogs
   final val alertConfirm = "Confirm New File"
@@ -85,7 +89,7 @@ object Properties {
     "1920×1080" -> (1920d, 1080d)
   )
 
-  final val resOptions: Seq[String] = Seq("854×480", "1024×576", "1280×720", "1600×900", "1920×1080")
+  final val ResolutionOptions: Seq[String] = Seq("854×480", "1024×576", "1280×720", "1600×900", "1920×1080")
 
   // Default font
   val DefaultTitleFont: jfxt.Font = Font.font("Helvetica", 25d)
