@@ -9,7 +9,9 @@ import javafx.scene.{layout => jfxl, paint => jfxp}
 import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.beans.property.{DoubleProperty, ObjectProperty}
-import scalafx.geometry.Insets
+import scalafx.event.ActionEvent
+import scalafx.geometry.{Insets, Pos}
+import scalafx.scene.control.Button
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.paint.{Color, CycleMethod, LinearGradient, Stop}
@@ -137,9 +139,33 @@ class ColorChooser extends VBox {
     )
   }
 
+  private val colorPalette = new ColorPalette() {
+    alignment = Pos.Center
+  }
+
+  private val saveColorButton = new StackPane() {
+    alignment = Pos.Center
+    children = Seq(
+      new Button("Save Color") {
+        prefWidth = Properties.ButtonWidth
+        onAction = { _: ActionEvent =>
+          colorPalette.value = valueProperty.value
+        }
+      }
+    )
+  }
+
   private val box = new VBox() {
     styleClass.add("color-rect-pane")
-    children = Seq(colorBar, colorRect, previewRect)
+    children = Seq(colorBar, colorRect, previewRect, saveColorButton, colorPalette)
+  }
+
+  //====================================================================================================================
+  // Construction
+  //====================================================================================================================
+
+  colorPalette.value.onChange { (_, _, newValue) =>
+    value = newValue
   }
 
   this.children = Seq(box)

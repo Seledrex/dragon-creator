@@ -27,8 +27,8 @@ class ColorPalette extends GridPane {
   private val propName = null
   private val defaultColor = jfxp.Color.WHITE
 
-  private final val paletteColumns = 10
-  private final val paletteRows = 2
+  private final val PaletteColumns = 12
+  private final val PaletteRows = 2
 
   private val buttonProp = new ObjectProperty[Button](bean, propName, null) {
     onChange { (_, oldButton, _) =>
@@ -56,8 +56,8 @@ class ColorPalette extends GridPane {
 
   children = {
     val swatches = for {
-      i <- 0 until paletteRows
-      j <- 0 until paletteColumns
+      i <- 0 until PaletteRows
+      j <- 0 until PaletteColumns
       swatch = {
         val button = new Button() {
           userData = defaultColor

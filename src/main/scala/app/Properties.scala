@@ -28,7 +28,7 @@ object Properties {
   final val ColorPalettePaneY = 296
 
   // Widths
-  final val pickerWidth: Int = 125
+  final val PickerWidth: Int = 125
   final val ButtonWidth: Int = 85
   final val textAreaWidth: Int = 300
 
@@ -73,7 +73,7 @@ object Properties {
   // Default color
   final val defaultColor = "#f2f2f2"
 
-  final val getScaleFactor = Map(
+  final val ScaleFactor = Map(
     "854×480"   -> 2.24824355971897,
     "1024×576"  -> 1.875,
     "1280×720"  -> 1.500,
@@ -81,7 +81,7 @@ object Properties {
     "1920×1080" -> 1.000
   )
 
-  final val getResTup = Map(
+  final val ResTuple = Map(
     "854×480"   -> (854d, 480d),
     "1024×576"  -> (1024d, 576d),
     "1280×720"  -> (1280d, 720d),

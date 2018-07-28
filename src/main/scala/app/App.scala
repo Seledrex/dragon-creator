@@ -41,10 +41,10 @@ object App extends JFXApp {
 
   private val creatorPane = new Pane() {
     styleClass.add("panel-style")
-    minWidth = Properties.getResTup(resolutionProp())._1
-    maxWidth = Properties.getResTup(resolutionProp())._1
-    minHeight = Properties.getResTup(resolutionProp())._2
-    maxHeight = Properties.getResTup(resolutionProp())._2
+    minWidth = Properties.ResTuple(resolutionProp())._1
+    maxWidth = Properties.ResTuple(resolutionProp())._1
+    minHeight = Properties.ResTuple(resolutionProp())._2
+    maxHeight = Properties.ResTuple(resolutionProp())._2
     relocate(Properties.CreatorPaneX, Properties.CreatorPaneY)
   }
 
@@ -57,35 +57,26 @@ object App extends JFXApp {
     relocate(Properties.ColorChooserPaneX, Properties.ColorChooserPaneY)
   }
 
-  private val colorPalette = new ColorPalette() {
-    styleClass.add("panel-style")
-  }
-
-  private val colorPalettePane = new Pane() {
-    children = Seq(colorPalette)
-    relocate(Properties.ColorPalettePaneX, Properties.ColorPalettePaneY)
-  }
-
   //====================================================================================================================
   // Change Listeners
   //====================================================================================================================
 
   resolutionProp.onChange { (_, oldValue, newValue) =>
-    val oldRes = Properties.getResTup(oldValue)
-    val newRes = Properties.getResTup(newValue)
+    val oldRes = Properties.ResTuple(oldValue)
+    val newRes = Properties.ResTuple(newValue)
     val scaleFactor = newRes._1 / oldRes._1
 
     creatorPane.children.foreach { node =>
       val elem = node.asInstanceOf[jfxs.Group].children.head.asInstanceOf[ImageLayer]
-      elem.changeSize(Properties.getScaleFactor(newValue))
+      elem.changeSize(Properties.ScaleFactor(newValue))
       elem.translateX = elem.translateX() * scaleFactor
       elem.translateY = elem.translateY() * scaleFactor
     }
 
-    creatorPane.minWidth = Properties.getResTup(newValue)._1
-    creatorPane.maxWidth = Properties.getResTup(newValue)._1
-    creatorPane.minHeight = Properties.getResTup(newValue)._2
-    creatorPane.maxHeight = Properties.getResTup(newValue)._2
+    creatorPane.minWidth = Properties.ResTuple(newValue)._1
+    creatorPane.maxWidth = Properties.ResTuple(newValue)._1
+    creatorPane.minHeight = Properties.ResTuple(newValue)._2
+    creatorPane.maxHeight = Properties.ResTuple(newValue)._2
   }
 
   selectedLayerProp.onChange { (_, oldValue, newValue) =>
@@ -114,8 +105,6 @@ object App extends JFXApp {
     minWidth = Properties.Resolution._1
     minHeight = Properties.Resolution._2
 
-    colorChooser.value <==> colorPalette.value
-
     scene = new Scene(Properties.Resolution._1, Properties.Resolution._2) {
       stylesheets.addAll("css/app.css", "css/colorchooser.css", "css/colorpalette.css")
       root = new BorderPane() {
@@ -134,8 +123,7 @@ object App extends JFXApp {
           alignmentInParent = Pos.TopLeft
           children = Seq(
             makeCreatorPaneDraggable(creatorPane),
-            makeDraggable(colorChooserPane),
-            makeDraggable(colorPalettePane)
+            makeDraggable(colorChooserPane)
           )
         }
       }
@@ -197,7 +185,7 @@ object App extends JFXApp {
             creatorPane.children.add({
               val layer = makeTransformable(
                 new ImageLayer(Res.horn1) {
-                  changeSize(Properties.getScaleFactor(resolutionProp()))
+                  changeSize(Properties.ScaleFactor(resolutionProp()))
                 }
               )
               selectedLayerProp.value = layer
@@ -232,13 +220,16 @@ object App extends JFXApp {
         new Button(Properties.ResetButton) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
-            creatorPane.relocate(Properties.CreatorPaneX, Properties.CreatorPaneY)
+            creatorPane.translateX = 0
+            creatorPane.translateY = 0
+            colorChooserPane.translateX = 0
+            colorChooserPane.translateY = 0
             resolutionProp.value = Properties.ResPropInit
           }
         },
         new ComboBox(Properties.ResolutionOptions) {
-          value <==> resolutionProp
           prefWidth = 105
+          value <==> resolutionProp
         },
         new ChoiceBox[String]() {
           items.value.addAll(Properties.DragTool, Properties.MoveTool)
@@ -263,7 +254,7 @@ object App extends JFXApp {
       styleClass.add("panel-style")
       children = Seq(
         new Label(Properties.StatusLabel) {
-          prefWidth = Properties.pickerWidth
+          prefWidth = Properties.PickerWidth
           alignmentInParent = Pos.Center
           alignment = Pos.Center
           text <== statusProp
