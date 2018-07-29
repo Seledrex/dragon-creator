@@ -26,16 +26,27 @@ class ColorChooser extends VBox {
   // Variables
   //====================================================================================================================
 
-  private val bean = this
-  private val propName = null
-  private val defaultColor = Color.White
+  private final val Bean = this
+  private final val PropName = null
+  private final val DefaultColor = jfxp.Color.WHITE
 
-  private val hue = new DoubleProperty(bean, propName, defaultColor.hue * 100)
-  private val sat = new DoubleProperty(bean, propName, defaultColor.saturation * 100)
-  private val bright = new DoubleProperty(bean, propName, defaultColor.brightness * 100)
-  private val alpha = new DoubleProperty(bean, propName, defaultColor.opacity * 100)
+  private final val PaletteColumns = 12
+  private final val PaletteRows = 2
 
-  private val valueProperty = new ObjectProperty[jfxp.Color](bean, propName, defaultColor) {
+  private val hue = new DoubleProperty(Bean, PropName, DefaultColor.hue * 100)
+  private val sat = new DoubleProperty(Bean, PropName, DefaultColor.saturation * 100)
+  private val bright = new DoubleProperty(Bean, PropName, DefaultColor.brightness * 100)
+  private val alpha = new DoubleProperty(Bean, PropName, DefaultColor.opacity * 100)
+
+  private val buttonProp = new ObjectProperty[Button](Bean, PropName, null) {
+    onChange { (_, oldButton, _) =>
+      if (oldButton != null) {
+        oldButton.style = getBackgroundStyle(oldButton.userData.asInstanceOf[jfxp.Color])
+      }
+    }
+  }
+
+  private val valueProperty = new ObjectProperty[jfxp.Color](Bean, PropName, DefaultColor) {
     onChange { (_, _, newColor) =>
       hue.set(newColor.getHue)
       sat.set(newColor.getSaturation * 100)
@@ -139,33 +150,58 @@ class ColorChooser extends VBox {
     )
   }
 
-  private val colorPalette = new ColorPalette() {
-    alignment = Pos.Center
-  }
-
   private val saveColorButton = new StackPane() {
     alignment = Pos.Center
     children = Seq(
       new Button("Save Color") {
         prefWidth = Properties.ButtonWidth
         onAction = { _: ActionEvent =>
-          colorPalette.value = valueProperty.value
+          buttonProp.value.userData = valueProperty()
+          buttonProp.value.style = getBackgroundStyle(buttonProp.value.userData.asInstanceOf[jfxp.Color]) +
+            getBorderStyle(buttonProp.value.userData.asInstanceOf[jfxp.Color])
         }
       }
     )
   }
 
+  private val colorPalette = new GridPane() {
+    vgrow = Priority.Never
+    hgap = 1
+    vgap = 1
+    children = {
+      val swatches = for {
+        i <- 0 until PaletteRows
+        j <- 0 until PaletteColumns
+        swatch = {
+          val button = new Button() {
+            userData = DefaultColor
+            styleClass.add("color-swatch")
+            style = getBackgroundStyle(DefaultColor)
+          }
+          button.onMouseEntered = { _: MouseEvent =>
+            button.style = getBackgroundStyle(button.userData.asInstanceOf[jfxp.Color]) +
+              getBorderStyle(button.userData.asInstanceOf[jfxp.Color])
+          }
+          button.onMouseExited = { _: MouseEvent =>
+            if (buttonProp.value != button)
+              button.style = getBackgroundStyle(button.userData.asInstanceOf[jfxp.Color])
+          }
+          button.onAction = { _: ActionEvent =>
+            buttonProp.value = button
+            valueProperty.value = button.userData.asInstanceOf[jfxp.Color]
+          }
+          GridPane.setRowIndex(button, i)
+          GridPane.setColumnIndex(button, j)
+          button
+        }
+      } yield swatch
+      swatches
+    }
+  }
+
   private val box = new VBox() {
     styleClass.add("color-rect-pane")
     children = Seq(colorBar, colorRect, previewRect, saveColorButton, colorPalette)
-  }
-
-  //====================================================================================================================
-  // Construction
-  //====================================================================================================================
-
-  colorPalette.value.onChange { (_, _, newValue) =>
-    value = newValue
   }
 
   this.children = Seq(box)
@@ -205,6 +241,18 @@ class ColorChooser extends VBox {
     if (value < 0) 0
     else if (value > 1) 1
     else value
+  }
+
+  private def getBackgroundStyle(color: Color): String = { "" +
+    "-fx-background-color: " + Util.colorToRGBCode(color) + ";" +
+    "-fx-background-insets: 0;" +
+    "-fx-background-radius: 0;" +
+    "-fx-border-color: ladder(" + Util.colorToRGBCode(color) + ", #7a7a7a 49%, #7a7a7a 50%);" +
+    "-fx-border-radius: 0;"
+  }
+
+  private def getBorderStyle(color: Color): String = { "" +
+    "-fx-border-width: 2;"
   }
 
   //====================================================================================================================
