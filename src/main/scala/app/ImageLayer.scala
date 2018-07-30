@@ -76,3 +76,19 @@ class ImageLayer(val resource: Res.Resource) extends jfxl.Pane {
   }
 
 }
+
+//====================================================================================================================
+// Serialization
+//====================================================================================================================
+
+object ImageLayer {
+
+  @SerialVersionUID(100L)
+  class Serialization(layer: ImageLayer) extends Serializable {
+    val resource: Res.Resource = layer.resource
+    val color: String = Util.colorToRGBCode(Right(layer.color()))
+    val xPos: Double = layer.getTranslateX
+    val yPos: Double = layer.getTranslateY
+  }
+
+}

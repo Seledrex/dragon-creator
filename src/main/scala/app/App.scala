@@ -254,7 +254,7 @@ object App extends JFXApp {
 
         // Read in layers and deserialize
         val in = new ObjectInputStream(new FileInputStream(saveFile()))
-        val seq = in.readObject.asInstanceOf[Array[ImageLayerSerialization]]
+        val seq = in.readObject.asInstanceOf[Array[ImageLayer.Serialization]]
         seq.foreach {
           layer => creatorPane.children.add(
             makeTransformable(
@@ -316,10 +316,10 @@ object App extends JFXApp {
         saveFile.value = new File(saveFile().getAbsolutePath + ".rawr")
       }
 
-      val seq = new Array[ImageLayerSerialization](creatorPane.children.size)
+      val seq = new Array[ImageLayer.Serialization](creatorPane.children.size)
       val layers = getLayers
       for (i <- 0 until creatorPane.children.size) {
-        seq(i) = new ImageLayerSerialization(layers(i))
+        seq(i) = new ImageLayer.Serialization(layers(i))
       }
 
       var out: ObjectOutputStream = null
@@ -546,6 +546,7 @@ object App extends JFXApp {
           )
         },
         new ChoiceBox[String]() {
+          prefWidth = Properties.ButtonWidth
           items.value.addAll(Properties.DragTool, Properties.MoveTool)
           selectionModel().select(1)
           selectionModel().selectedItemProperty().onChange { (_, oldValue, newValue) =>
