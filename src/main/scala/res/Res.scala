@@ -5,7 +5,8 @@ package res
   */
 object Res {
 
-  final class Resource(val name: String, val fill: String, val outline: String)
+  @SerialVersionUID(101L)
+  final class Resource(val name: String, val fill: String, val outline: String) extends Serializable
 
   final val baseDragon = new Resource(
     "Dragon",

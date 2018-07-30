@@ -1,6 +1,7 @@
 package app
 
 import scalafx.scene.paint.Color
+import javafx.scene.{paint => jfxp}
 
 object Util {
 
@@ -9,8 +10,11 @@ object Util {
     * @param color Color to convert.
     * @return Hex code string.
     */
-  def colorToRGBCode(color: Color): String = {
-    "#%02x%02x%02x" format ((color.red * 255).toInt, (color.green * 255).toInt, (color.blue * 255).toInt)
+  def colorToRGBCode(color: Either[Color, jfxp.Color]): String = {
+    color match {
+      case Left(x) => "#%02x%02x%02x" format((x.red * 255).toInt, (x.green * 255).toInt, (x.blue * 255).toInt)
+      case Right(x) => "#%02x%02x%02x" format((x.getRed * 255).toInt, (x.getGreen * 255).toInt, (x.getBlue * 255).toInt)
+    }
   }
 
 }

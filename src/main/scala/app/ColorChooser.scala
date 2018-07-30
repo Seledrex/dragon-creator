@@ -243,10 +243,10 @@ class ColorChooser extends VBox {
   }
 
   private def getBackgroundStyle(color: Color): String = { "" +
-    "-fx-background-color: " + Util.colorToRGBCode(color) + ";" +
+    "-fx-background-color: " + Util.colorToRGBCode(Left(color)) + ";" +
     "-fx-background-insets: 0;" +
     "-fx-background-radius: 0;" +
-    "-fx-border-color: ladder(" + Util.colorToRGBCode(color) + ", #bdbdbd 49%, #bdbdbd 50%);" +
+    "-fx-border-color: ladder(" + Util.colorToRGBCode(Left(color)) + ", #bdbdbd 49%, #bdbdbd 50%);" +
     "-fx-border-radius: 0;"
   }
 

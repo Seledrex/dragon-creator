@@ -64,13 +64,13 @@ object Properties {
 
   // Alerts and dialogs
   final val alertConfirm = "Confirm New File"
-  final val alertSuccess = "Success"
+  final val AlertSuccess = "Success"
   final val alertError = "Error"
   final val dialogResChoice = "Select Resolution"
   final val dialogFontChooser = "Select Font"
 
   // File chooser
-  final val fileChooserTitle = "Choose File"
+  final val FileChooserTitle = "Choose File"
 
   // None option
   final val noneOption = "None"
@@ -78,7 +78,7 @@ object Properties {
   // Default color
   final val defaultColor = "#f2f2f2"
 
-  final val ScaleFactor = Map(
+  final val getScaleFactor = Map(
     "854×480"   -> 2.24824355971897,
     "1024×576"  -> 1.875,
     "1280×720"  -> 1.500,
@@ -86,7 +86,7 @@ object Properties {
     "1920×1080" -> 1.000
   )
 
-  final val ResTuple = Map(
+  final val getResTuple = Map(
     "854×480"   -> (854d, 480d),
     "1024×576"  -> (1024d, 576d),
     "1280×720"  -> (1280d, 720d),

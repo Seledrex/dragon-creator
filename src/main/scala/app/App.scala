@@ -4,17 +4,22 @@ package app
 // Imports
 //======================================================================================================================
 
+import java.io._
+
 import javafx.{scene => jfxs}
+import org.apache.commons.io.FilenameUtils
 import res.Res
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
+import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene}
+import scalafx.stage.FileChooser
 
 //======================================================================================================================
 // App
@@ -34,6 +39,8 @@ object App extends JFXApp {
   private val resolutionProp = new StringProperty(bean, propName, Properties.ResPropInit)
   private val selectedLayerProp = new ObjectProperty[jfxs.Group](bean, propName, null)
   private val statusProp = new StringProperty(bean, propName, Properties.StatusLabel)
+  private val saveFile = new ObjectProperty[File](bean, propName, null)
+  private val madeChangesProp = new BooleanProperty(bean, propName, false)
 
   //====================================================================================================================
   // Application Variables
@@ -41,10 +48,10 @@ object App extends JFXApp {
 
   private val creatorPane = new Pane() {
     styleClass.add("panel-style")
-    minWidth = Properties.ResTuple(resolutionProp())._1
-    maxWidth = Properties.ResTuple(resolutionProp())._1
-    minHeight = Properties.ResTuple(resolutionProp())._2
-    maxHeight = Properties.ResTuple(resolutionProp())._2
+    minWidth = Properties.getResTuple(resolutionProp())._1
+    maxWidth = Properties.getResTuple(resolutionProp())._1
+    minHeight = Properties.getResTuple(resolutionProp())._2
+    maxHeight = Properties.getResTuple(resolutionProp())._2
     relocate(Properties.CreatorPaneX, Properties.CreatorPaneY)
   }
 
@@ -62,21 +69,21 @@ object App extends JFXApp {
   //====================================================================================================================
 
   resolutionProp.onChange { (_, oldValue, newValue) =>
-    val oldRes = Properties.ResTuple(oldValue)
-    val newRes = Properties.ResTuple(newValue)
+    val oldRes = Properties.getResTuple(oldValue)
+    val newRes = Properties.getResTuple(newValue)
     val scaleFactor = newRes._1 / oldRes._1
 
-    creatorPane.children.foreach { node =>
-      val elem = node.asInstanceOf[jfxs.Group].children.head.asInstanceOf[ImageLayer]
-      elem.changeSize(Properties.ScaleFactor(newValue))
-      elem.translateX = elem.translateX() * scaleFactor
-      elem.translateY = elem.translateY() * scaleFactor
+    val layers = getLayers
+    layers.foreach { layer =>
+      layer.changeSize(Properties.getScaleFactor(newValue))
+      layer.translateX = layer.translateX() * scaleFactor
+      layer.translateY = layer.translateY() * scaleFactor
     }
 
-    creatorPane.minWidth = Properties.ResTuple(newValue)._1
-    creatorPane.maxWidth = Properties.ResTuple(newValue)._1
-    creatorPane.minHeight = Properties.ResTuple(newValue)._2
-    creatorPane.maxHeight = Properties.ResTuple(newValue)._2
+    creatorPane.minWidth = Properties.getResTuple(newValue)._1
+    creatorPane.maxWidth = Properties.getResTuple(newValue)._1
+    creatorPane.minHeight = Properties.getResTuple(newValue)._2
+    creatorPane.maxHeight = Properties.getResTuple(newValue)._2
   }
 
   selectedLayerProp.onChange { (_, oldValue, newValue) =>
@@ -90,6 +97,22 @@ object App extends JFXApp {
       layer.style = "-fx-border-color: #7a7a7a; -fx-border-width: 1;"
       colorChooser.value = layer.color()
       layer.color <== colorChooser.value
+    }
+  }
+  
+  saveFile.onChange { (_, _, _) => madeChangesProp.value = false }
+
+  madeChangesProp.onChange { (_, oldValue, madeChange) =>
+    if (oldValue == false && madeChange) {
+      if (saveFile() != null)
+        statusProp.value = FilenameUtils.getBaseName(saveFile().getName) + "*"
+      else
+        statusProp.value = Properties.StatusLabel + "*"
+    } else if (oldValue == true && !madeChange) {
+      if (saveFile() != null)
+        statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
+      else
+        statusProp.value = Properties.StatusLabel
     }
   }
 
@@ -106,16 +129,16 @@ object App extends JFXApp {
     minHeight = Properties.Resolution._2
 
     scene = new Scene(Properties.Resolution._1, Properties.Resolution._2) {
-      stylesheets.addAll("css/app.css", "css/colorchooser.css", "css/colorpalette.css")
+      stylesheets.addAll("css/app.css", "css/colorchooser.css")
       root = new BorderPane() {
         styleClass.add("background-style")
         top = new Pane() {
           margin = Insets(Properties.Padding)
           children = new HBox(Properties.Padding) {
             children = Seq(
+              createStatusPanel(),
               createFilePanel(),
-              createToolPanel(),
-              createStatusPanel()
+              createToolPanel()
             )
           }
         }
@@ -141,25 +164,25 @@ object App extends JFXApp {
         new Button(Properties.New) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
-            //loadRawrFile(true)
+            loadRawrFile(true)
           }
         },
         new Button(Properties.Open) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
-            //loadRawrFile(false)
+            loadRawrFile(false)
           }
         },
         new Button(Properties.Save) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
-            //saveRawrFile(false)
+            saveRawrFile(false)
           }
         },
         new Button(Properties.SaveAs) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
-            //saveRawrFile(true)
+            saveRawrFile(true)
           }
         },
         new Button(Properties.SaveImage) {
@@ -171,11 +194,268 @@ object App extends JFXApp {
         new Button(Properties.Quit) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
-            //quit()
+            quit()
           }
         }
       )
     }
+  }
+
+  //==================================================================================================================
+  // File Operations
+  //==================================================================================================================
+
+  /**
+    * Loads a new rawr file from disk or reinitialized the program.
+    * @param init True for reinitialization.
+    */
+  private def loadRawrFile(init: Boolean): Unit = {
+
+    /**
+      * Resets the images to default.
+      */
+    def reset(): Unit = {
+      saveFile.value = null
+      creatorPane.children.clear()
+      madeChangesProp.value = false
+    }
+
+    /**
+      * Loads a rawr file from disk.
+      */
+    def load(): Unit = {
+
+      /**
+        * Creates a bad format dialog.
+        * @return Alert.
+        */
+      def createBadFormatDialog(fileName: String): Alert = createExceptionDialog(
+        new Exception("Incorrect file format."),
+        "Could not load " + fileName + ".",
+        "Incorrect file format.")
+
+      // Create file chooser that only accepts rawr files
+      val chooser = new FileChooser() {
+        title = Properties.FileChooserTitle
+        extensionFilters.addAll(new FileChooser.ExtensionFilter("RAWR", "*.rawr"))
+      }
+
+      // Prompt user to choose file
+      saveFile.value = chooser.showOpenDialog(stage)
+
+      // Check if file was chosen
+      if (saveFile() != null) {
+
+        // Ensure file extension
+        if (FilenameUtils.getExtension(saveFile().getAbsolutePath) != "rawr") {
+          createBadFormatDialog(saveFile().getName).showAndWait()
+          return
+        }
+
+        // Read in layers and deserialize
+        val in = new ObjectInputStream(new FileInputStream(saveFile()))
+        val seq = in.readObject.asInstanceOf[Array[ImageLayerSerialization]]
+        seq.foreach {
+          layer => creatorPane.children.add(
+            makeTransformable(
+              {
+                val imgLayer = new ImageLayer(layer.resource)
+                imgLayer.color = layer.color
+                imgLayer.translateX = layer.xPos
+                imgLayer.translateY = layer.yPos
+                imgLayer.changeSize(Properties.getScaleFactor(resolutionProp()))
+                imgLayer.color.onChange { (_, _, _) => madeChangesProp.value = true }
+                imgLayer
+              }
+            )
+          )
+        }
+
+        statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
+        madeChangesProp.value = false
+      }
+    }
+
+    /**
+      * Returns either reset or load.
+      * @param init True for reinitialization.
+      */
+    def resetElseLoad(init: Boolean): Unit = if (init) reset() else load()
+
+    // Check if changes were made to the current file
+    if (madeChangesProp()) {
+      createSaveChangesDialog().showAndWait() match {
+        case Some(ButtonType.Yes) => saveRawrFile(false); resetElseLoad(init)
+        case Some(ButtonType.No) => resetElseLoad(init)
+        case _ =>
+      }
+    } else resetElseLoad(init)
+  }
+
+  /**
+    * Saves the current rawr file to disk.
+    * @param saveAs True if doing Save As operation.
+    */
+  private def saveRawrFile(saveAs: Boolean): Unit = {
+
+    // Open file chooser if necessary
+    if (saveFile() == null || saveAs) {
+      val chooser = new FileChooser() {
+        title = Properties.FileChooserTitle
+        extensionFilters.addAll(new FileChooser.ExtensionFilter("RAWR", "*.rawr"))
+      }
+
+      saveFile.value = chooser.showSaveDialog(stage)
+    }
+
+    // Check if file is chosen
+    if (saveFile != null) {
+
+      // Ensure file extension
+      if (FilenameUtils.getExtension(saveFile().getAbsolutePath) == "") {
+        saveFile.value = new File(saveFile().getAbsolutePath + ".rawr")
+      }
+
+      val seq = new Array[ImageLayerSerialization](creatorPane.children.size)
+      val layers = getLayers
+      for (i <- 0 until creatorPane.children.size) {
+        seq(i) = new ImageLayerSerialization(layers(i))
+      }
+
+      var out: ObjectOutputStream = null
+
+      try {
+        out = new ObjectOutputStream(new FileOutputStream(saveFile()))
+        out.writeObject(seq)
+        new Alert(AlertType.Information) {
+          initOwner(stage)
+          title = Properties.AlertSuccess
+          headerText = "Successfully saved file."
+          contentText = "The file was saved successfully to " + saveFile().getAbsolutePath
+        }.showAndWait()
+        madeChangesProp.value = false
+      } catch {
+        case e: Exception => createExceptionDialog(e, "Could not save file.", e.getMessage)
+      } finally {
+        out.close()
+      }
+    }
+  }
+
+  /**
+    * Saves what is currently being displayed in the GUI to disk as a
+    * PNG image.
+    */
+  /*private def saveImage(): Unit = {
+
+    // Create resolution choice dialog
+    val resChoiceDialog = new ChoiceDialog(defaultChoice = PropertiesOld.imgResStr, choices = PropertiesOld.resOptions) {
+      initOwner(stage)
+      title = PropertiesOld.dialogResChoice
+      headerText = "Select the resolution to output to."
+      contentText = "Resolution:"
+    }
+
+    // Get choice
+    val resChoice = resChoiceDialog.showAndWait() match {
+      case Some(choice) => choice
+      case None => return
+    }
+
+    // Create file chooser
+    val chooser = new FileChooser() {
+      title = PropertiesOld.fileChooserTitle
+      extensionFilters.addAll(
+        new FileChooser.ExtensionFilter("PNG", "*.png"))
+    }
+
+    // Prompt user to choose file
+    var file = chooser.showSaveDialog(stage)
+
+    // Check if a file is chosen
+    if (file != null) {
+
+      // Ensure file extension
+      if (FilenameUtils.getExtension(file.getAbsolutePath) == "") {
+        file = new File(file.getAbsolutePath + ".png")
+      }
+
+      def copyBackground(): Seq[Node] = {
+        Seq(new ImgElem(Res.baseDragon) {
+          visible(true)
+          changeColor(backgroundImg.color)
+          changeSize(convertRes(resChoice))
+        }
+        ).flatMap(x => Seq(x.fillImg, x.borderImg))
+      }
+
+      def copyImage(): Seq[Node] = {
+        imgList.map(x => x._3._1)
+          .flatMap(set => set.toSeq)
+          .filter(img => img.isVisible)
+          .map(img => (img.resource, img.color))
+          .map(x =>
+            new ImgElem(x._1) {
+              visible(true)
+              changeColor(x._2)
+              changeSize(convertRes(resChoice))
+            })
+          .flatMap(x => Seq(x.fillImg, x.borderImg))
+      }
+
+      def copyText(): Seq[Node] = {
+        Seq(new VBox() {
+          children = Seq(
+            new Text(titleTextProp.value) {
+              font = adjustFontSize(titleFPProp.value,  PropertiesOld.getScaleFactor(resChoice))
+              fill = textFillProp.value
+            },
+            new Text(bodyTextProp.value) {
+              font = adjustFontSize(bodyFPProp.value,  PropertiesOld.getScaleFactor(resChoice))
+              fill = textFillProp.value
+            }
+          )
+          relocate(10, 0)
+        })
+      }
+
+      // Group together visible elements and make copies
+      val group: Group = new Group() {
+        children = copyBackground() ++ copyImage() ++ copyText()
+        blendMode = BlendMode.SrcAtop
+      }
+
+      // Create snapshot of group
+      val wr = new WritableImage(convertRes(resChoice)._1.toInt, convertRes(resChoice)._2.toInt)
+      val out = group.snapshot(new SnapshotParameters(), wr)
+
+      // Attempt to save image to disk
+      try {
+        ImageIO.write(
+          SwingFXUtils.fromFXImage(out, null),
+          FilenameUtils.getExtension(file.getAbsolutePath),
+          file)
+        new Alert(AlertType.Information) {
+          initOwner(stage)
+          title = PropertiesOld.alertSuccess
+          headerText = "Successfully saved image."
+          contentText = "The image was saved successfully to " + file.getAbsolutePath
+        }.showAndWait()
+      } catch {
+        case e: Exception => createExceptionDialog(e,
+          "Error saving image.", e.getMessage).showAndWait()
+      }
+    }
+  }*/
+
+  private def quit(): Unit = {
+    if (madeChangesProp.value) {
+      createSaveChangesDialog().showAndWait() match {
+        case Some(ButtonType.Yes) => saveRawrFile(false);  System.exit(0)
+        case Some(ButtonType.No) =>  System.exit(0)
+        case _ =>
+      }
+    } else System.exit(0)
   }
 
   //====================================================================================================================
@@ -193,7 +473,8 @@ object App extends JFXApp {
             creatorPane.children.add({
               val layer = makeTransformable(
                 new ImageLayer(Res.horn1) {
-                  changeSize(Properties.ScaleFactor(resolutionProp()))
+                  changeSize(Properties.getScaleFactor(resolutionProp()))
+                  color.onChange { (_, _, _) => madeChangesProp.value = true }
                 }
               )
               selectedLayerProp.value = layer
@@ -315,6 +596,67 @@ object App extends JFXApp {
   }
 
   //====================================================================================================================
+  // Dialogs
+  //====================================================================================================================
+
+  /**
+    * Creates a new save changes dialog.
+    * @return Alert.
+    */
+  private def createSaveChangesDialog(): Alert = {
+    new Alert(AlertType.Confirmation) {
+      initOwner(stage)
+      title = Properties.alertConfirm
+      headerText = "Would you like to save changes to the current file?"
+      contentText = "You have made changes to " +
+        { if (saveFile() == null) "an unsaved file" else FilenameUtils.getBaseName(saveFile().getName) } + "."
+      buttonTypes = Seq(ButtonType.Yes, ButtonType.No, ButtonType.Cancel)
+    }
+  }
+
+  /**
+    * Creates a new exception dialog.
+    * @param e Exception to create dialog for.
+    * @param header Header of dialog.
+    * @param content Content of dialog.
+    * @return Alert.
+    */
+  private def createExceptionDialog(e: Exception, header: String, content: String): Alert = {
+    val exceptionText = {
+      val sw = new StringWriter()
+      val pw = new PrintWriter(sw)
+      e.printStackTrace(pw)
+      sw.toString
+    }
+
+    val label = new Label("The exception stacktrace was:")
+
+    val textArea = new TextArea {
+      text = exceptionText
+      editable = false
+      wrapText = true
+      maxWidth = Double.MaxValue
+      maxHeight = Double.MaxValue
+      vgrow = Priority.Always
+      hgrow = Priority.Always
+    }
+
+    val expContent = new GridPane {
+      maxWidth = Double.MaxValue
+      add(label, 0, 0)
+      add(textArea, 0, 1)
+    }
+
+    new Alert(AlertType.Error) {
+      initOwner(stage)
+      title = Properties.alertError
+      headerText = header
+      contentText = content
+      dialogPane().expandableContent = expContent
+    }
+  }
+
+  //====================================================================================================================
   // Mouse Events
   //====================================================================================================================
 
@@ -350,6 +692,8 @@ object App extends JFXApp {
                 layer.translateX = bounds._3 - nodeBounds.getWidth - 2
               if (layer.translateY() + nodeBounds.getHeight > bounds._4)
                 layer.translateY = bounds._4 - nodeBounds.getHeight - 2
+
+              madeChangesProp.value = true
             }
           case _ =>
         }
@@ -407,6 +751,17 @@ object App extends JFXApp {
     var mouseAnchorY: Double = 0d
     var initialTranslateX: Double = 0d
     var initialTranslateY: Double = 0d
+  }
+
+  //====================================================================================================================
+  // Helper Functions
+  //====================================================================================================================
+
+  private def getLayers: IndexedSeq[ImageLayer] = {
+    for {
+      i <- 0 until creatorPane.children.size
+      layer = creatorPane.children.get(i).asInstanceOf[jfxs.Group].children.head.asInstanceOf[ImageLayer]
+    } yield layer
   }
 
 }
