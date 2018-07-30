@@ -5,7 +5,7 @@ package app
 //======================================================================================================================
 
 import javafx.beans.{binding => jfxb}
-import javafx.scene.{layout => jfxl, paint => jfxp}
+import javafx.scene.{layout => jfxl, paint => jfxp, control => jfxc}
 import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.beans.property.{DoubleProperty, ObjectProperty}
@@ -138,7 +138,7 @@ class ColorChooser extends VBox {
     )
   }
 
-  private val previewRect = new Pane() {
+  private val previewRect: Pane = new Pane() {
     styleClass.add("preview-rect")
     background <== Bindings.createObjectBinding(
       () => {
@@ -159,6 +159,7 @@ class ColorChooser extends VBox {
     onMouseExited = { _: MouseEvent =>
       style = "-fx-border-color: derive(#ececec, -20%); -fx-border-width: 1;"
     }
+    Tooltip.install(this, new Tooltip("Click to save color"))
   }
 
   private val colorPalette = new GridPane() {
@@ -194,6 +195,7 @@ class ColorChooser extends VBox {
       } yield swatch
       swatches
     }
+    buttonProp.value = { val button = children.head.asInstanceOf[jfxc.Button]; button }
   }
 
   private val box = new VBox() {
@@ -201,10 +203,7 @@ class ColorChooser extends VBox {
     children = Seq(colorBar, colorRect, previewRect, colorPalette)
   }
 
-  Tooltip.install(previewRect, new Tooltip("Click to save color"))
-  buttonProp.value = { val button = colorPalette.children.head.asInstanceOf[javafx.scene.control.Button]; button }
   this.children = Seq(box)
-
 
   //====================================================================================================================
   // Private methods
