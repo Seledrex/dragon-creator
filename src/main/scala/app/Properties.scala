@@ -42,16 +42,20 @@ object Properties {
   final val StatusLabel = "Untitled"
 
   // Button names
-  final val NewButton = "New"
-  final val OpenButton = "Open"
-  final val SaveButton = "Save"
-  final val SaveAsButton = "Save As..."
-  final val SaveImageButton = "Save Image..."
-  final val QuitButton = "Quit"
-  final val ResetButton = "Reset"
+  final val New = "New"
+  final val Open = "Open"
+  final val Save = "Save"
+  final val SaveAs = "Save As..."
+  final val SaveImage = "Save Image..."
+  final val Quit = "Quit"
+  final val Reset = "Reset"
   final val titleFontButton = "Title Font"
   final val bodyFontButton = "Body Font"
   final val applyColorButton = "Apply Color"
+  final val BringForward = "Bring Forward"
+  final val BringToFront = "Bring to Front"
+  final val SendBackward = "Send Backward"
+  final val SendToBack = "Send to Back"
 
   // Tool names
   final val DragTool = "Drag Tool"

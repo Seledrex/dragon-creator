@@ -11,7 +11,7 @@ import scalafx.application.JFXApp
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.control.{Button, ChoiceBox, ComboBox, Label}
+import scalafx.scene.control._
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene}
@@ -134,37 +134,37 @@ object App extends JFXApp {
     new HBox(Properties.Padding) {
       styleClass.add("panel-style")
       children = Seq(
-        new Button(Properties.NewButton) {
+        new Button(Properties.New) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
             //loadRawrFile(true)
           }
         },
-        new Button(Properties.OpenButton) {
+        new Button(Properties.Open) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
             //loadRawrFile(false)
           }
         },
-        new Button(Properties.SaveButton) {
+        new Button(Properties.Save) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
             //saveRawrFile(false)
           }
         },
-        new Button(Properties.SaveAsButton) {
+        new Button(Properties.SaveAs) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
             //saveRawrFile(true)
           }
         },
-        new Button(Properties.SaveImageButton) {
+        new Button(Properties.SaveImage) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
             //saveImage()
           }
         },
-        new Button(Properties.QuitButton) {
+        new Button(Properties.Quit) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
             //quit()
@@ -193,9 +193,10 @@ object App extends JFXApp {
             })
           }
         },
-        new Button("Move up") {
-          prefWidth = Properties.ButtonWidth
-          onAction = { _: ActionEvent =>
+        new SplitMenuButton() {
+          text = Properties.BringForward
+          prefWidth = Properties.PickerWidth
+          def bringForward(): Unit = {
             if (selectedLayerProp.value != null) {
               val index = creatorPane.children.indexOf(selectedLayerProp.value)
               if (index < creatorPane.children.size - 1) {
@@ -204,10 +205,25 @@ object App extends JFXApp {
               }
             }
           }
+          onAction = { _: ActionEvent => bringForward() }
+          items = Seq(
+            new MenuItem(Properties.BringForward) {
+              onAction = { _: ActionEvent => bringForward() }
+            },
+            new MenuItem(Properties.BringToFront) {
+              onAction = { _: ActionEvent =>
+                if (selectedLayerProp.value != null) {
+                  val index = creatorPane.children.indexOf(selectedLayerProp.value)
+                  creatorPane.children.get(index).toFront()
+                }
+              }
+            }
+          )
         },
-        new Button("Move down") {
-          prefWidth = Properties.ButtonWidth
-          onAction = { _: ActionEvent =>
+        new SplitMenuButton() {
+          text = Properties.SendBackward
+          prefWidth = Properties.PickerWidth
+          def sendBackward(): Unit = {
             if (selectedLayerProp.value != null) {
               val index = creatorPane.children.indexOf(selectedLayerProp.value)
               if (index > 0) {
@@ -216,8 +232,22 @@ object App extends JFXApp {
               }
             }
           }
+          onAction = { _: ActionEvent => sendBackward() }
+          items = Seq(
+            new MenuItem(Properties.SendBackward) {
+              onAction = { _: ActionEvent => sendBackward() }
+            },
+            new MenuItem(Properties.SendToBack) {
+              onAction = { _: ActionEvent =>
+                if (selectedLayerProp.value != null) {
+                  val index = creatorPane.children.indexOf(selectedLayerProp.value)
+                  creatorPane.children.get(index).toBack()
+                }
+              }
+            }
+          )
         },
-        new Button(Properties.ResetButton) {
+        new Button(Properties.Reset) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
             creatorPane.translateX = 0
