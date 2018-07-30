@@ -99,7 +99,7 @@ object App extends JFXApp {
       layer.color <== colorChooser.value
     }
   }
-  
+
   saveFile.onChange { (_, _, _) => madeChangesProp.value = false }
 
   madeChangesProp.onChange { (_, oldValue, madeChange) =>
