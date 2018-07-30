@@ -56,6 +56,7 @@ object Properties {
   final val BringToFront = "Bring to Front"
   final val SendBackward = "Send Backward"
   final val SendToBack = "Send to Back"
+  final val Delete = "Delete"
 
   // Tool names
   final val DragTool = "Drag Tool"

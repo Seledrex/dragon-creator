@@ -130,6 +130,10 @@ object App extends JFXApp {
     }
   }
 
+  //====================================================================================================================
+  // File Panel
+  //====================================================================================================================
+
   private def createFilePanel(): HBox = {
     new HBox(Properties.Padding) {
       styleClass.add("panel-style")
@@ -174,6 +178,10 @@ object App extends JFXApp {
     }
   }
 
+  //====================================================================================================================
+  // Tool Panel
+  //====================================================================================================================
+
   private def createToolPanel(): HBox = {
     new HBox(Properties.Padding) {
       alignment = Pos.CenterLeft
@@ -193,7 +201,7 @@ object App extends JFXApp {
             })
           }
         },
-        new Button("Delete") {
+        new Button(Properties.Delete) {
           prefWidth = Properties.ButtonWidth
           onAction = { _: ActionEvent =>
             if (selectedLayerProp() != null) {
@@ -288,6 +296,10 @@ object App extends JFXApp {
     }
   }
 
+  //====================================================================================================================
+  // Status Panel
+  //====================================================================================================================
+
   private def createStatusPanel(): StackPane = {
     new StackPane() {
       styleClass.add("panel-style")
@@ -301,6 +313,10 @@ object App extends JFXApp {
       )
     }
   }
+
+  //====================================================================================================================
+  // Mouse Events
+  //====================================================================================================================
 
   private def makeTransformable(layer: ImageLayer): Group = {
 
