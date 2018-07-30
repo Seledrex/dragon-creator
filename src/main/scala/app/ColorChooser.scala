@@ -10,8 +10,8 @@ import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.beans.property.{DoubleProperty, ObjectProperty}
 import scalafx.event.ActionEvent
-import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.control.Button
+import scalafx.geometry.Insets
+import scalafx.scene.control.{Button, Tooltip}
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
 import scalafx.scene.paint.{Color, CycleMethod, LinearGradient, Stop}
@@ -148,20 +148,17 @@ class ColorChooser extends VBox {
           Insets.Empty))
       }, valueProperty
     )
-  }
-
-  private val saveColorButton = new StackPane() {
-    alignment = Pos.Center
-    children = Seq(
-      new Button("Save Color") {
-        prefWidth = Properties.ButtonWidth
-        onAction = { _: ActionEvent =>
-          buttonProp.value.userData = valueProperty()
-          buttonProp.value.style = getBackgroundStyle(buttonProp.value.userData.asInstanceOf[jfxp.Color]) +
-            getBorderStyle(buttonProp.value.userData.asInstanceOf[jfxp.Color])
-        }
-      }
-    )
+    onMouseClicked = { _: MouseEvent =>
+      buttonProp.value.userData = valueProperty()
+      buttonProp.value.style = getBackgroundStyle(buttonProp.value.userData.asInstanceOf[jfxp.Color]) +
+        getBorderStyle(buttonProp.value.userData.asInstanceOf[jfxp.Color])
+    }
+    onMouseEntered = { _: MouseEvent =>
+      style = "-fx-border-color: #70beff; -fx-border-width: 2;"
+    }
+    onMouseExited = { _: MouseEvent =>
+      style = "-fx-border-color: derive(#ececec, -20%); -fx-border-width: 1;"
+    }
   }
 
   private val colorPalette = new GridPane() {
@@ -201,10 +198,13 @@ class ColorChooser extends VBox {
 
   private val box = new VBox() {
     styleClass.add("color-rect-pane")
-    children = Seq(colorBar, colorRect, previewRect, saveColorButton, colorPalette)
+    children = Seq(colorBar, colorRect, previewRect, colorPalette)
   }
 
+  Tooltip.install(previewRect, new Tooltip("Click to save color"))
+  buttonProp.value = { val button = colorPalette.children.head.asInstanceOf[javafx.scene.control.Button]; button }
   this.children = Seq(box)
+
 
   //====================================================================================================================
   // Private methods
@@ -247,7 +247,7 @@ class ColorChooser extends VBox {
     "-fx-background-color: " + Util.colorToRGBCode(color) + ";" +
     "-fx-background-insets: 0;" +
     "-fx-background-radius: 0;" +
-    "-fx-border-color: ladder(" + Util.colorToRGBCode(color) + ", #7a7a7a 49%, #7a7a7a 50%);" +
+    "-fx-border-color: ladder(" + Util.colorToRGBCode(color) + ", #bdbdbd 49%, #bdbdbd 50%);" +
     "-fx-border-radius: 0;"
   }
 

@@ -6,7 +6,7 @@ package old
 
 import java.io.{File, PrintWriter, StringWriter}
 
-import app.{ColorChooser, ColorPalette, Util}
+import app.{ColorChooser, Util}
 import javafx.scene.{layout => jfxl, paint => jfxp, text => jfxt}
 import javax.imageio.ImageIO
 import org.apache.commons.io.FilenameUtils
@@ -113,10 +113,6 @@ object AppOld extends JFXApp {
         styleClass.add("panel-style")
     }
 
-    private val colorPalette: ColorPalette = new ColorPalette() {
-        styleClass.add("panel-style")
-    }
-
     //==================================================================================================================
     // Property Listeners
     //==================================================================================================================
@@ -216,10 +212,7 @@ object AppOld extends JFXApp {
         val imagePanel: Node = makeDraggable(createImagePanel())
         val textPanel: Node = makeDraggable(createTextPanel())
 
-        colorChooser.value <==> colorPalette.value
-
         val colorChooserPanel: Node = makeDraggable(colorChooser)
-        val colorPalettePanel: Node = makeDraggable(colorPalette)
 
         // Make window panel
         val windowPanel: Node = new Pane() {
@@ -236,7 +229,6 @@ object AppOld extends JFXApp {
                                 textPanel.relocate(PropertiesOld.textPanelX, PropertiesOld.textPanelY)
                                 imagePanel.relocate(PropertiesOld.imagePanelX, PropertiesOld.imagePanelY)
                                 colorChooserPanel.relocate(PropertiesOld.colorChooserPanelX, PropertiesOld.colorChooserPanelY)
-                                colorPalettePanel.relocate(PropertiesOld.colorPalettePanelX, PropertiesOld.colorPalettePanelY)
                                 resProp.value = PropertiesOld.imgResStr
                             }
                         }
@@ -284,8 +276,7 @@ object AppOld extends JFXApp {
             textPanel.relocate(PropertiesOld.textPanelX, PropertiesOld.textPanelY)
             imagePanel.relocate(PropertiesOld.imagePanelX, PropertiesOld.imagePanelY)
             colorChooserPanel.relocate(PropertiesOld.colorChooserPanelX, PropertiesOld.colorChooserPanelY)
-            colorPalettePanel.relocate(PropertiesOld.colorPalettePanelX, PropertiesOld.colorPalettePanelY)
-            children = Seq(imagePanel, textPanel, colorChooserPanel, colorPalettePanel, optionPanel)
+            children = Seq(imagePanel, textPanel, colorChooserPanel, optionPanel)
             alignmentInParent = Pos.TopLeft
         }
 

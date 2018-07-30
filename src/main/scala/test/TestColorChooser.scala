@@ -4,7 +4,7 @@ package test
 // Imports
 //======================================================================================================================
 
-import app.{ColorChooser, ColorPalette, Properties}
+import app.{ColorChooser, Properties}
 import javafx.scene.{effect => jfxe, paint => jfxp}
 import scalafx.Includes._
 import scalafx.application.JFXApp
@@ -96,10 +96,7 @@ object TestColorChooser extends JFXApp {
             root = new BorderPane() {
                 center = new Pane() {
                     children = Seq(
-                        imageView,
-                        new ColorPalette() {
-                            styleClass.add("panel-style")
-                        }
+                        imageView
                     )
                 }
                 top = new HBox() {
