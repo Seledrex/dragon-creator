@@ -29,8 +29,8 @@ object App extends JFXApp {
   // Properties
   //====================================================================================================================
 
-  private val dragToolProp = new BooleanProperty(bean, propName, true)
-  private val moveToolProp = new BooleanProperty(bean, propName, false)
+  private val dragToolProp = new BooleanProperty(bean, propName, false)
+  private val moveToolProp = new BooleanProperty(bean, propName, true)
   private val resolutionProp = new StringProperty(bean, propName, Properties.ResPropInit)
   private val selectedLayerProp = new ObjectProperty[jfxs.Group](bean, propName, null)
   private val statusProp = new StringProperty(bean, propName, Properties.StatusLabel)
@@ -193,15 +193,24 @@ object App extends JFXApp {
             })
           }
         },
+        new Button("Delete") {
+          prefWidth = Properties.ButtonWidth
+          onAction = { _: ActionEvent =>
+            if (selectedLayerProp() != null) {
+              creatorPane.children.remove(selectedLayerProp())
+              selectedLayerProp.value = null
+            }
+          }
+        },
         new SplitMenuButton() {
           text = Properties.BringForward
           prefWidth = Properties.PickerWidth
           def bringForward(): Unit = {
-            if (selectedLayerProp.value != null) {
-              val index = creatorPane.children.indexOf(selectedLayerProp.value)
+            if (selectedLayerProp() != null) {
+              val index = creatorPane.children.indexOf(selectedLayerProp())
               if (index < creatorPane.children.size - 1) {
-                creatorPane.children.remove(selectedLayerProp.value)
-                creatorPane.children.add(index + 1, selectedLayerProp.value)
+                creatorPane.children.remove(selectedLayerProp())
+                creatorPane.children.add(index + 1, selectedLayerProp())
               }
             }
           }
@@ -212,8 +221,8 @@ object App extends JFXApp {
             },
             new MenuItem(Properties.BringToFront) {
               onAction = { _: ActionEvent =>
-                if (selectedLayerProp.value != null) {
-                  val index = creatorPane.children.indexOf(selectedLayerProp.value)
+                if (selectedLayerProp() != null) {
+                  val index = creatorPane.children.indexOf(selectedLayerProp())
                   creatorPane.children.get(index).toFront()
                 }
               }
@@ -224,11 +233,11 @@ object App extends JFXApp {
           text = Properties.SendBackward
           prefWidth = Properties.PickerWidth
           def sendBackward(): Unit = {
-            if (selectedLayerProp.value != null) {
-              val index = creatorPane.children.indexOf(selectedLayerProp.value)
+            if (selectedLayerProp() != null) {
+              val index = creatorPane.children.indexOf(selectedLayerProp())
               if (index > 0) {
-                creatorPane.children.remove(selectedLayerProp.value)
-                creatorPane.children.add(index - 1, selectedLayerProp.value)
+                creatorPane.children.remove(selectedLayerProp())
+                creatorPane.children.add(index - 1, selectedLayerProp())
               }
             }
           }
@@ -239,13 +248,27 @@ object App extends JFXApp {
             },
             new MenuItem(Properties.SendToBack) {
               onAction = { _: ActionEvent =>
-                if (selectedLayerProp.value != null) {
-                  val index = creatorPane.children.indexOf(selectedLayerProp.value)
+                if (selectedLayerProp() != null) {
+                  val index = creatorPane.children.indexOf(selectedLayerProp())
                   creatorPane.children.get(index).toBack()
                 }
               }
             }
           )
+        },
+        new ChoiceBox[String]() {
+          items.value.addAll(Properties.DragTool, Properties.MoveTool)
+          selectionModel().select(1)
+          selectionModel().selectedItemProperty().onChange { (_, oldValue, newValue) =>
+            oldValue match {
+              case a if a == Properties.DragTool => dragToolProp.value = false
+              case b if b == Properties.MoveTool => moveToolProp.value = false
+            }
+            newValue match {
+              case a if a == Properties.DragTool => dragToolProp.value = true
+              case b if b == Properties.MoveTool => moveToolProp.value = true
+            }
+          }
         },
         new Button(Properties.Reset) {
           prefWidth = Properties.ButtonWidth
@@ -260,20 +283,6 @@ object App extends JFXApp {
         new ComboBox(Properties.ResolutionOptions) {
           prefWidth = 105
           value <==> resolutionProp
-        },
-        new ChoiceBox[String]() {
-          items.value.addAll(Properties.DragTool, Properties.MoveTool)
-          selectionModel().select(0)
-          selectionModel().selectedItemProperty().onChange { (_, oldValue, newValue) =>
-            oldValue match {
-              case a if a == Properties.DragTool => dragToolProp.value = false
-              case b if b == Properties.MoveTool => moveToolProp.value = false
-            }
-            newValue match {
-              case a if a == Properties.DragTool => dragToolProp.value = true
-              case b if b == Properties.MoveTool => moveToolProp.value = true
-            }
-          }
         }
       )
     }
