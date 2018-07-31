@@ -107,20 +107,8 @@ object App extends JFXApp {
     }
   }
 
-  saveFile.onChange { (_, _, _) => madeChangesProp.value = false }
-
-  madeChangesProp.onChange { (_, oldValue, madeChange) =>
-    if (oldValue == false && madeChange) {
-      if (saveFile() != null)
-        statusProp.value = FilenameUtils.getBaseName(saveFile().getName) + "*"
-      else
-        statusProp.value = Properties.StatusLabel + "*"
-    } else if (oldValue == true && !madeChange) {
-      if (saveFile() != null)
-        statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
-      else
-        statusProp.value = Properties.StatusLabel
-    }
+  madeChangesProp.onChange { (_, _, newValue) =>
+    if (newValue) updateStatus(true)
   }
 
   //====================================================================================================================
@@ -219,15 +207,6 @@ object App extends JFXApp {
   private def loadRawrFile(init: Boolean): Unit = {
 
     /**
-      * Resets the images to default.
-      */
-    def reset(): Unit = {
-      saveFile.value = null
-      statusProp.value = Properties.StatusLabel
-      madeChangesProp.value = false
-    }
-
-    /**
       * Loads a rawr file from disk.
       */
     def load(): Unit = {
@@ -268,6 +247,7 @@ object App extends JFXApp {
 
         attempt match {
           case Success(seq) =>
+            creatorPane.children.clear()
             seq.foreach(layer =>
               creatorPane.children.add(
                 makeTransformable(
@@ -285,8 +265,6 @@ object App extends JFXApp {
                 )
               )
             )
-            statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
-            madeChangesProp.value = false
           case Failure(e) =>
             createExceptionDialog(e, "Could not load file.", e.getMessage)
         }
@@ -298,8 +276,13 @@ object App extends JFXApp {
       * @param init True for reinitialization.
       */
     def resetElseLoad(init: Boolean): Unit = {
-      creatorPane.children.clear()
-      if (init) reset() else load()
+      if (init) {
+        creatorPane.children.clear()
+        saveFile.value = null
+      } else {
+        load()
+      }
+      updateStatus(false)
     }
 
     // Check if changes were made to the current file
@@ -357,7 +340,7 @@ object App extends JFXApp {
             headerText = "Successfully saved file."
             contentText = "The file was saved successfully to " + saveFile().getAbsolutePath
           }.showAndWait()
-          madeChangesProp.value = false
+          updateStatus(false)
           true
         case Failure(e) =>
           createExceptionDialog(e, "Could not save file.", e.getMessage)
@@ -753,6 +736,21 @@ object App extends JFXApp {
       i <- 0 until creatorPane.children.size
       layer = creatorPane.children.get(i).asInstanceOf[jfxs.Group].asInstanceOf[ImageLayer]
     } yield layer
+  }
+
+  private def updateStatus(changeMade: Boolean): Unit = {
+    if (changeMade) {
+      if (saveFile() != null)
+        statusProp.value = FilenameUtils.getBaseName(saveFile().getName) + "*"
+      else
+        statusProp.value = Properties.StatusLabel + "*"
+    } else {
+      madeChangesProp.value = false
+      if (saveFile() != null)
+        statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
+      else
+        statusProp.value = Properties.StatusLabel
+    }
   }
 
 }
