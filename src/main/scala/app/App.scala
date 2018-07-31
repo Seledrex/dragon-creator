@@ -406,53 +406,6 @@ object App extends JFXApp {
         file = new File(file.getAbsolutePath + ".png")
       }
 
-
-
-      /*def copyBackground(): Seq[Node] = {
-        Seq(new ImgElem(Res.baseDragon) {
-          visible(true)
-          changeColor(backgroundImg.color)
-          changeSize(convertRes(resChoice))
-        }
-        ).flatMap(x => Seq(x.fillImg, x.borderImg))
-      }
-
-      def copyImage(): Seq[Node] = {
-        imgList.map(x => x._3._1)
-          .flatMap(set => set.toSeq)
-          .filter(img => img.isVisible)
-          .map(img => (img.resource, img.color))
-          .map(x =>
-            new ImgElem(x._1) {
-              visible(true)
-              changeColor(x._2)
-              changeSize(convertRes(resChoice))
-            })
-          .flatMap(x => Seq(x.fillImg, x.borderImg))
-      }
-
-      def copyText(): Seq[Node] = {
-        Seq(new VBox() {
-          children = Seq(
-            new Text(titleTextProp.value) {
-              font = adjustFontSize(titleFPProp.value,  PropertiesOld.getScaleFactor(resChoice))
-              fill = textFillProp.value
-            },
-            new Text(bodyTextProp.value) {
-              font = adjustFontSize(bodyFPProp.value,  PropertiesOld.getScaleFactor(resChoice))
-              fill = textFillProp.value
-            }
-          )
-          relocate(10, 0)
-        })
-      }*/
-
-      // Group together visible elements and make copies
-      /*val group: Group = new Group() {
-        children = copyBackground() ++ copyImage() ++ copyText()
-        blendMode = BlendMode.SrcAtop
-      }*/
-
       // Create snapshot of group
       val temp = resolutionProp()
       resolutionProp.value = resChoice
@@ -461,20 +414,21 @@ object App extends JFXApp {
       resolutionProp.value = temp
 
       // Attempt to save image to disk
-      try {
+      Try {
         ImageIO.write(
           SwingFXUtils.fromFXImage(out, null),
           FilenameUtils.getExtension(file.getAbsolutePath),
           file)
-        new Alert(AlertType.Information) {
-          initOwner(stage)
-          title = Properties.AlertSuccess
-          headerText = "Successfully saved image."
-          contentText = "The image was saved successfully to " + file.getAbsolutePath
-        }.showAndWait()
-      } catch {
-        case e: Exception => createExceptionDialog(e,
-          "Error saving image.", e.getMessage).showAndWait()
+      } match {
+        case Success(_) =>
+          new Alert(AlertType.Information) {
+            initOwner(stage)
+            title = Properties.AlertSuccess
+            headerText = "Successfully saved image."
+            contentText = "The image was saved successfully to " + file.getAbsolutePath
+          }.showAndWait()
+        case Failure(e) =>
+          createExceptionDialog(e, "Error saving image.", e.getMessage).showAndWait()
       }
     }
   }
@@ -797,7 +751,7 @@ object App extends JFXApp {
   private def getLayers: IndexedSeq[ImageLayer] = {
     for {
       i <- 0 until creatorPane.children.size
-      layer = creatorPane.children.get(i).asInstanceOf[javafx.scene.Group].asInstanceOf[ImageLayer]
+      layer = creatorPane.children.get(i).asInstanceOf[jfxs.Group].asInstanceOf[ImageLayer]
     } yield layer
   }
 
