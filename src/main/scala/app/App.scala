@@ -39,7 +39,7 @@ object App extends JFXApp {
   private val dragToolProp = new BooleanProperty(bean, propName, false)
   private val moveToolProp = new BooleanProperty(bean, propName, true)
   private val resolutionProp = new StringProperty(bean, propName, Properties.ResPropInit)
-  private val selectedLayerProp = new ObjectProperty[ImageLayer](bean, propName, null)
+  private val selectedLayerProp = new ObjectProperty[jfxs.Group](bean, propName, null)
   private val statusProp = new StringProperty(bean, propName, Properties.StatusLabel)
   private val saveFile = new ObjectProperty[File](bean, propName, null)
   private val madeChangesProp = new BooleanProperty(bean, propName, false)
@@ -90,12 +90,12 @@ object App extends JFXApp {
 
   selectedLayerProp.onChange { (_, oldValue, newValue) =>
     if (oldValue != null) {
-      val layer = oldValue
+      val layer = oldValue.asInstanceOf[ImageLayer]
       layer.style = "-fx-border-width: 0;"
       layer.color.unbind()
     }
     if (newValue != null) {
-      val layer = newValue
+      val layer = newValue.asInstanceOf[ImageLayer]
       layer.style = "-fx-border-color: #7a7a7a; -fx-border-width: 1;"
       colorChooser.value = layer.color()
       layer.color <== colorChooser.value
@@ -218,6 +218,7 @@ object App extends JFXApp {
       */
     def reset(): Unit = {
       saveFile.value = null
+      statusProp.value = Properties.StatusLabel
       madeChangesProp.value = false
     }
 
@@ -253,35 +254,36 @@ object App extends JFXApp {
           return
         }
 
-        // Read in layers and deserialize
         var in: ObjectInputStream = null
-
-        try {
+        val attempt = Try {
           in = new ObjectInputStream(new FileInputStream(saveFile()))
-          val seq = in.readObject.asInstanceOf[Array[ImageLayerSerialization]]
-          seq.foreach(layer =>
-            creatorPane.children.add(
-              makeTransformable(
-                {
-                  val imgLayer = new ImageLayer(layer.resource)
-                  imgLayer.color = layer.color
-                  imgLayer.translateX = layer.xPos
-                  imgLayer.translateY = layer.yPos
-                  imgLayer.changeSize(Properties.getScaleFactor(resolutionProp()))
-                  imgLayer.color.onChange { (_, _, _) => madeChangesProp.value = true }
-                  imgLayer
-                }
+          in.readObject.asInstanceOf[Array[ImageLayer.Serialization]]
+        }
+        in.close()
+
+        attempt match {
+          case Success(seq) =>
+            seq.foreach(layer =>
+              creatorPane.children.add(
+                makeTransformable(
+                  {
+                    val imgLayer = new ImageLayer(layer.resource)
+                    imgLayer.color = layer.color
+                    imgLayer.changeSize(Properties.getScaleFactor(resolutionProp()))
+                    imgLayer.color.onChange { (_, _, _) => madeChangesProp.value = true }
+                    imgLayer.children.forEach(view => {
+                      view.translateX = layer.xPos; view.translateY = layer.yPos
+                    })
+                    imgLayer
+                  }
+                )
               )
             )
-          )
-          statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
-          madeChangesProp.value = false
-        } catch {
-          case e: Exception => createExceptionDialog(e, "Could not load file.", e.getMessage)
-        } finally {
-          in.close()
+            statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
+            madeChangesProp.value = false
+          case Failure(e) =>
+            createExceptionDialog(e, "Could not load file.", e.getMessage)
         }
-
       }
     }
 
@@ -328,17 +330,20 @@ object App extends JFXApp {
         saveFile.value = new File(saveFile().getAbsolutePath + ".rawr")
       }
 
-      val seq = new Array[ImageLayerSerialization](creatorPane.children.size)
+      val seq = new Array[ImageLayer.Serialization](creatorPane.children.size)
       val layers = getLayers
       for ((layer, i) <- layers.view.zipWithIndex) {
-        seq(i) = new ImageLayerSerialization(layer)
+        seq(i) = new ImageLayer.Serialization(layer)
       }
 
-      Try {
-        val out = new ObjectOutputStream(new FileOutputStream(saveFile()))
+      var out: ObjectOutputStream = null
+      val attempt = Try {
+        out = new ObjectOutputStream(new FileOutputStream(saveFile()))
         out.writeObject(seq)
-        out.close()
-      } match {
+      }
+      out.close()
+
+      attempt match {
         case Success(_) =>
           new Alert(AlertType.Information) {
             initOwner(stage)
@@ -349,7 +354,7 @@ object App extends JFXApp {
           madeChangesProp.value = false
           true
         case Failure(e) =>
-          createExceptionDialog(e, "Could not save file.", e.getMessage);
+          createExceptionDialog(e, "Could not save file.", e.getMessage)
           false
       }
     } else {
@@ -675,14 +680,16 @@ object App extends JFXApp {
   // Mouse Events
   //====================================================================================================================
 
-  private def makeTransformable(layer: ImageLayer): ImageLayer = {
+  private def makeTransformable(layer: ImageLayer): Group = {
 
     val dragContext = for {
       _ <- 0 until layer.children.size
       ctx = new DragContext()
     } yield ctx
 
-    layer.filterEvent(MouseEvent.Any) { me: MouseEvent =>
+    val x: Group = layer
+
+    x.filterEvent(MouseEvent.Any) { me: MouseEvent =>
       me.eventType match {
         case MouseEvent.MousePressed =>
           if (!dragToolProp()) selectedLayerProp.value = layer
@@ -780,7 +787,7 @@ object App extends JFXApp {
   private def getLayers: IndexedSeq[ImageLayer] = {
     for {
       i <- 0 until creatorPane.children.size
-      layer = creatorPane.children.get(i).asInstanceOf[jfxs.Group].children.head.asInstanceOf[ImageLayer]
+      layer = creatorPane.children.get(i).asInstanceOf[javafx.scene.Group].asInstanceOf[ImageLayer]
     } yield layer
   }
 

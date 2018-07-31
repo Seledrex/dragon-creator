@@ -4,11 +4,11 @@ package app
 // Imports
 //======================================================================================================================
 
-import javafx.scene.{effect => jfxe, layout => jfxl, paint => jfxp}
+import javafx.scene.{Group, effect => jfxe, paint => jfxp}
 import res.Res
 import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
-import scalafx.scene.{CacheHint, Group}
+import scalafx.scene.CacheHint
 import scalafx.scene.effect.ColorInput
 import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.paint.Color
@@ -54,7 +54,7 @@ class ImageLayer(val resource: Res.Resource) extends Group {
       0, 0, fillImg.getWidth.toInt, fillImg.getHeight.toInt, newColor
     )
   }
-  children.addAll(fillView, outlineView)
+  getChildren.addAll(fillView, outlineView)
 
   //====================================================================================================================
   // Public methods
@@ -87,8 +87,8 @@ object ImageLayer {
   class Serialization(layer: ImageLayer) extends Serializable {
     val resource: Res.Resource = layer.resource
     val color: String = Util.colorToRGBCode(Right(layer.color()))
-    val xPos: Double = layer.getTranslateX
-    val yPos: Double = layer.getTranslateY
+    val xPos: Double = layer.children.get(0).getTranslateX
+    val yPos: Double = layer.children.get(0).getTranslateY
   }
 
 }
