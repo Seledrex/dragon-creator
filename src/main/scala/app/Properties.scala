@@ -66,7 +66,7 @@ object Properties {
   final val alertConfirm = "Confirm New File"
   final val AlertSuccess = "Success"
   final val alertError = "Error"
-  final val dialogResChoice = "Select Resolution"
+  final val DialogResChoice = "Select Resolution"
   final val dialogFontChooser = "Select Font"
 
   // File chooser

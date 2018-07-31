@@ -7,18 +7,21 @@ package app
 import java.io._
 
 import javafx.{scene => jfxs}
+import javax.imageio.ImageIO
 import org.apache.commons.io.FilenameUtils
 import res.Res
 import scalafx.Includes._
 import scalafx.application.JFXApp
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
+import scalafx.embed.swing.SwingFXUtils
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
+import scalafx.scene.image.WritableImage
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
-import scalafx.scene.{Group, Node, Scene}
+import scalafx.scene.{Group, Node, Scene, SnapshotParameters}
 import scalafx.stage.FileChooser
 
 import scala.util.{Failure, Success, Try}
@@ -78,8 +81,10 @@ object App extends JFXApp {
     val layers = getLayers
     layers.foreach { layer =>
       layer.changeSize(Properties.getScaleFactor(newValue))
-      layer.translateX = layer.translateX() * scaleFactor
-      layer.translateY = layer.translateY() * scaleFactor
+      layer.children.foreach { view =>
+        view.translateX = view.translateX() * scaleFactor
+        view.translateY = view.translateY() * scaleFactor
+      }
     }
 
     creatorPane.minWidth = Properties.getResTuple(newValue)._1
@@ -91,12 +96,12 @@ object App extends JFXApp {
   selectedLayerProp.onChange { (_, oldValue, newValue) =>
     if (oldValue != null) {
       val layer = oldValue.asInstanceOf[ImageLayer]
-      layer.style = "-fx-border-width: 0;"
+      //layer.style = "-fx-border-width: 0;"
       layer.color.unbind()
     }
     if (newValue != null) {
       val layer = newValue.asInstanceOf[ImageLayer]
-      layer.style = "-fx-border-color: #7a7a7a; -fx-border-width: 1;"
+      //layer.style = "-fx-border-color: #7a7a7a; -fx-border-width: 1;"
       colorChooser.value = layer.color()
       layer.color <== colorChooser.value
     }
@@ -190,7 +195,7 @@ object App extends JFXApp {
         new Button(Properties.SaveImage) {
           prefWidth = Properties.ButtonWidth
           onAction = (_: ActionEvent) => {
-            //saveImage()
+            saveImage()
           }
         },
         new Button(Properties.Quit) {
@@ -271,9 +276,10 @@ object App extends JFXApp {
                     imgLayer.color = layer.color
                     imgLayer.changeSize(Properties.getScaleFactor(resolutionProp()))
                     imgLayer.color.onChange { (_, _, _) => madeChangesProp.value = true }
-                    imgLayer.children.forEach(view => {
-                      view.translateX = layer.xPos; view.translateY = layer.yPos
-                    })
+                    imgLayer.children.forEach { view =>
+                      view.translateX = layer.xPos
+                      view.translateY = layer.yPos
+                    }
                     imgLayer
                   }
                 )
@@ -366,12 +372,12 @@ object App extends JFXApp {
     * Saves what is currently being displayed in the GUI to disk as a
     * PNG image.
     */
-  /*private def saveImage(): Unit = {
+  private def saveImage(): Unit = {
 
     // Create resolution choice dialog
-    val resChoiceDialog = new ChoiceDialog(defaultChoice = PropertiesOld.imgResStr, choices = PropertiesOld.resOptions) {
+    val resChoiceDialog = new ChoiceDialog(defaultChoice = Properties.ResPropInit, choices = Properties.ResolutionOptions) {
       initOwner(stage)
-      title = PropertiesOld.dialogResChoice
+      title = Properties.DialogResChoice
       headerText = "Select the resolution to output to."
       contentText = "Resolution:"
     }
@@ -384,7 +390,7 @@ object App extends JFXApp {
 
     // Create file chooser
     val chooser = new FileChooser() {
-      title = PropertiesOld.fileChooserTitle
+      title = Properties.FileChooserTitle
       extensionFilters.addAll(
         new FileChooser.ExtensionFilter("PNG", "*.png"))
     }
@@ -400,7 +406,9 @@ object App extends JFXApp {
         file = new File(file.getAbsolutePath + ".png")
       }
 
-      def copyBackground(): Seq[Node] = {
+
+
+      /*def copyBackground(): Seq[Node] = {
         Seq(new ImgElem(Res.baseDragon) {
           visible(true)
           changeColor(backgroundImg.color)
@@ -437,17 +445,20 @@ object App extends JFXApp {
           )
           relocate(10, 0)
         })
-      }
+      }*/
 
       // Group together visible elements and make copies
-      val group: Group = new Group() {
+      /*val group: Group = new Group() {
         children = copyBackground() ++ copyImage() ++ copyText()
         blendMode = BlendMode.SrcAtop
-      }
+      }*/
 
       // Create snapshot of group
-      val wr = new WritableImage(convertRes(resChoice)._1.toInt, convertRes(resChoice)._2.toInt)
-      val out = group.snapshot(new SnapshotParameters(), wr)
+      val temp = resolutionProp()
+      resolutionProp.value = resChoice
+      val wr = new WritableImage(Properties.getResTuple(resChoice)._1.toInt, Properties.getResTuple(resChoice)._2.toInt)
+      val out = creatorPane.snapshot(new SnapshotParameters(), wr)
+      resolutionProp.value = temp
 
       // Attempt to save image to disk
       try {
@@ -457,7 +468,7 @@ object App extends JFXApp {
           file)
         new Alert(AlertType.Information) {
           initOwner(stage)
-          title = PropertiesOld.alertSuccess
+          title = Properties.AlertSuccess
           headerText = "Successfully saved image."
           contentText = "The image was saved successfully to " + file.getAbsolutePath
         }.showAndWait()
@@ -466,7 +477,7 @@ object App extends JFXApp {
           "Error saving image.", e.getMessage).showAndWait()
       }
     }
-  }*/
+  }
 
   private def quit(): Unit = {
     if (madeChangesProp.value) {
@@ -688,7 +699,6 @@ object App extends JFXApp {
     } yield ctx
 
     val x: Group = layer
-
     x.filterEvent(MouseEvent.Any) { me: MouseEvent =>
       me.eventType match {
         case MouseEvent.MousePressed =>
