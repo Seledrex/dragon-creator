@@ -8,7 +8,7 @@ import javafx.scene.{effect => jfxe, layout => jfxl, paint => jfxp}
 import res.Res
 import scalafx.Includes._
 import scalafx.beans.property.ObjectProperty
-import scalafx.scene.CacheHint
+import scalafx.scene.{CacheHint, Group}
 import scalafx.scene.effect.ColorInput
 import scalafx.scene.image.{Image, ImageView}
 import scalafx.scene.paint.Color
@@ -17,7 +17,7 @@ import scalafx.scene.paint.Color
 // ImageLayer
 //======================================================================================================================
 
-class ImageLayer(val resource: Res.Resource) extends jfxl.Pane {
+class ImageLayer(val resource: Res.Resource) extends Group {
 
   private final val bean = this
   private final val propName = null
@@ -54,7 +54,7 @@ class ImageLayer(val resource: Res.Resource) extends jfxl.Pane {
       0, 0, fillImg.getWidth.toInt, fillImg.getHeight.toInt, newColor
     )
   }
-  getChildren.addAll(fillView, outlineView)
+  children.addAll(fillView, outlineView)
 
   //====================================================================================================================
   // Public methods

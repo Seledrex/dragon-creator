@@ -21,6 +21,8 @@ import scalafx.scene.layout._
 import scalafx.scene.{Group, Node, Scene}
 import scalafx.stage.FileChooser
 
+import scala.util.{Failure, Success, Try}
+
 //======================================================================================================================
 // App
 //======================================================================================================================
@@ -37,7 +39,7 @@ object App extends JFXApp {
   private val dragToolProp = new BooleanProperty(bean, propName, false)
   private val moveToolProp = new BooleanProperty(bean, propName, true)
   private val resolutionProp = new StringProperty(bean, propName, Properties.ResPropInit)
-  private val selectedLayerProp = new ObjectProperty[jfxs.Group](bean, propName, null)
+  private val selectedLayerProp = new ObjectProperty[ImageLayer](bean, propName, null)
   private val statusProp = new StringProperty(bean, propName, Properties.StatusLabel)
   private val saveFile = new ObjectProperty[File](bean, propName, null)
   private val madeChangesProp = new BooleanProperty(bean, propName, false)
@@ -88,12 +90,12 @@ object App extends JFXApp {
 
   selectedLayerProp.onChange { (_, oldValue, newValue) =>
     if (oldValue != null) {
-      val layer = oldValue.children.head.asInstanceOf[ImageLayer]
+      val layer = oldValue
       layer.style = "-fx-border-width: 0;"
       layer.color.unbind()
     }
     if (newValue != null) {
-      val layer = newValue.children.head.asInstanceOf[ImageLayer]
+      val layer = newValue
       layer.style = "-fx-border-color: #7a7a7a; -fx-border-width: 1;"
       colorChooser.value = layer.color()
       layer.color <== colorChooser.value
@@ -216,7 +218,6 @@ object App extends JFXApp {
       */
     def reset(): Unit = {
       saveFile.value = null
-      creatorPane.children.clear()
       madeChangesProp.value = false
     }
 
@@ -253,26 +254,34 @@ object App extends JFXApp {
         }
 
         // Read in layers and deserialize
-        val in = new ObjectInputStream(new FileInputStream(saveFile()))
-        val seq = in.readObject.asInstanceOf[Array[ImageLayerSerialization]]
-        seq.foreach {
-          layer => creatorPane.children.add(
-            makeTransformable(
-              {
-                val imgLayer = new ImageLayer(layer.resource)
-                imgLayer.color = layer.color
-                imgLayer.translateX = layer.xPos
-                imgLayer.translateY = layer.yPos
-                imgLayer.changeSize(Properties.getScaleFactor(resolutionProp()))
-                imgLayer.color.onChange { (_, _, _) => madeChangesProp.value = true }
-                imgLayer
-              }
+        var in: ObjectInputStream = null
+
+        try {
+          in = new ObjectInputStream(new FileInputStream(saveFile()))
+          val seq = in.readObject.asInstanceOf[Array[ImageLayerSerialization]]
+          seq.foreach(layer =>
+            creatorPane.children.add(
+              makeTransformable(
+                {
+                  val imgLayer = new ImageLayer(layer.resource)
+                  imgLayer.color = layer.color
+                  imgLayer.translateX = layer.xPos
+                  imgLayer.translateY = layer.yPos
+                  imgLayer.changeSize(Properties.getScaleFactor(resolutionProp()))
+                  imgLayer.color.onChange { (_, _, _) => madeChangesProp.value = true }
+                  imgLayer
+                }
+              )
             )
           )
+          statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
+          madeChangesProp.value = false
+        } catch {
+          case e: Exception => createExceptionDialog(e, "Could not load file.", e.getMessage)
+        } finally {
+          in.close()
         }
 
-        statusProp.value = FilenameUtils.getBaseName(saveFile().getName)
-        madeChangesProp.value = false
       }
     }
 
@@ -280,12 +289,15 @@ object App extends JFXApp {
       * Returns either reset or load.
       * @param init True for reinitialization.
       */
-    def resetElseLoad(init: Boolean): Unit = if (init) reset() else load()
+    def resetElseLoad(init: Boolean): Unit = {
+      creatorPane.children.clear()
+      if (init) reset() else load()
+    }
 
     // Check if changes were made to the current file
     if (madeChangesProp()) {
       createSaveChangesDialog().showAndWait() match {
-        case Some(ButtonType.Yes) => saveRawrFile(false); resetElseLoad(init)
+        case Some(ButtonType.Yes) => if (saveRawrFile(false)) resetElseLoad(init)
         case Some(ButtonType.No) => resetElseLoad(init)
         case _ =>
       }
@@ -296,7 +308,7 @@ object App extends JFXApp {
     * Saves the current rawr file to disk.
     * @param saveAs True if doing Save As operation.
     */
-  private def saveRawrFile(saveAs: Boolean): Unit = {
+  private def saveRawrFile(saveAs: Boolean): Boolean = {
 
     // Open file chooser if necessary
     if (saveFile() == null || saveAs) {
@@ -309,7 +321,7 @@ object App extends JFXApp {
     }
 
     // Check if file is chosen
-    if (saveFile != null) {
+    if (saveFile() != null) {
 
       // Ensure file extension
       if (FilenameUtils.getExtension(saveFile().getAbsolutePath) == "") {
@@ -318,27 +330,30 @@ object App extends JFXApp {
 
       val seq = new Array[ImageLayerSerialization](creatorPane.children.size)
       val layers = getLayers
-      for (i <- 0 until creatorPane.children.size) {
-        seq(i) = new ImageLayerSerialization(layers(i))
+      for ((layer, i) <- layers.view.zipWithIndex) {
+        seq(i) = new ImageLayerSerialization(layer)
       }
 
-      var out: ObjectOutputStream = null
-
-      try {
-        out = new ObjectOutputStream(new FileOutputStream(saveFile()))
+      Try {
+        val out = new ObjectOutputStream(new FileOutputStream(saveFile()))
         out.writeObject(seq)
-        new Alert(AlertType.Information) {
-          initOwner(stage)
-          title = Properties.AlertSuccess
-          headerText = "Successfully saved file."
-          contentText = "The file was saved successfully to " + saveFile().getAbsolutePath
-        }.showAndWait()
-        madeChangesProp.value = false
-      } catch {
-        case e: Exception => createExceptionDialog(e, "Could not save file.", e.getMessage)
-      } finally {
         out.close()
+      } match {
+        case Success(_) =>
+          new Alert(AlertType.Information) {
+            initOwner(stage)
+            title = Properties.AlertSuccess
+            headerText = "Successfully saved file."
+            contentText = "The file was saved successfully to " + saveFile().getAbsolutePath
+          }.showAndWait()
+          madeChangesProp.value = false
+          true
+        case Failure(e) =>
+          createExceptionDialog(e, "Could not save file.", e.getMessage);
+          false
       }
+    } else {
+      false
     }
   }
 
@@ -621,7 +636,7 @@ object App extends JFXApp {
     * @param content Content of dialog.
     * @return Alert.
     */
-  private def createExceptionDialog(e: Exception, header: String, content: String): Alert = {
+  private def createExceptionDialog(e: Throwable, header: String, content: String): Alert = {
     val exceptionText = {
       val sw = new StringWriter()
       val pw = new PrintWriter(sw)
@@ -660,46 +675,51 @@ object App extends JFXApp {
   // Mouse Events
   //====================================================================================================================
 
-  private def makeTransformable(layer: ImageLayer): Group = {
+  private def makeTransformable(layer: ImageLayer): ImageLayer = {
 
-    val dragContext = new DragContext()
+    val dragContext = for {
+      _ <- 0 until layer.children.size
+      ctx = new DragContext()
+    } yield ctx
 
-    new Group(layer) {
-      val self: Group = this
-      filterEvent(MouseEvent.Any) { me: MouseEvent =>
-        me.eventType match {
-          case MouseEvent.MousePressed =>
-            if (!dragToolProp()) selectedLayerProp.value = self
-            if (moveToolProp()) {
-              dragContext.mouseAnchorX = me.x
-              dragContext.mouseAnchorY = me.y
-              dragContext.initialTranslateX = layer.translateX()
-              dragContext.initialTranslateY = layer.translateY()
+    layer.filterEvent(MouseEvent.Any) { me: MouseEvent =>
+      me.eventType match {
+        case MouseEvent.MousePressed =>
+          if (!dragToolProp()) selectedLayerProp.value = layer
+          if (moveToolProp()) {
+            for ((view, i) <- layer.children.view.zipWithIndex) {
+              dragContext(i).mouseAnchorX = me.x
+              dragContext(i).mouseAnchorY = me.y
+              dragContext(i).initialTranslateX = view.translateX()
+              dragContext(i).initialTranslateY = view.translateY()
             }
-          case MouseEvent.MouseDragged =>
-            if (moveToolProp()) {
-              layer.translateX = dragContext.initialTranslateX + me.x - dragContext.mouseAnchorX
-              layer.translateY = dragContext.initialTranslateY + me.y - dragContext.mouseAnchorY
+          }
+        case MouseEvent.MouseDragged =>
+          if (moveToolProp()) {
+            for ((view, i) <- layer.children.view.zipWithIndex) {
+              view.translateX = dragContext(i).initialTranslateX + me.x - dragContext(i).mouseAnchorX
+              view.translateY = dragContext(i).initialTranslateY + me.y - dragContext(i).mouseAnchorY
 
               val bounds = (0, 0, creatorPane.maxWidth(), creatorPane.maxHeight())
-              val nodeBounds = layer.localToScene(layer.getBoundsInLocal)
+              val nodeBounds = view.localToScene(view.getBoundsInLocal)
 
-              if (layer.translateX() < bounds._1)
-                layer.translateX = bounds._1 + 2
-              if (layer.translateY() < bounds._2)
-                layer.translateY = bounds._2 + 2
-              if (layer.translateX() + nodeBounds.getWidth > bounds._3)
-                layer.translateX = bounds._3 - nodeBounds.getWidth - 2
-              if (layer.translateY() + nodeBounds.getHeight > bounds._4)
-                layer.translateY = bounds._4 - nodeBounds.getHeight - 2
-
-              madeChangesProp.value = true
+              if (view.translateX() < bounds._1)
+                view.translateX = bounds._1 + 2
+              if (view.translateY() < bounds._2)
+                view.translateY = bounds._2 + 2
+              if (view.translateX() + nodeBounds.getWidth > bounds._3)
+                view.translateX = bounds._3 - nodeBounds.getWidth - 2
+              if (view.translateY() + nodeBounds.getHeight > bounds._4)
+                view.translateY = bounds._4 - nodeBounds.getHeight - 2
             }
-          case _ =>
-        }
-        me.consume()
+            madeChangesProp.value = true
+          }
+        case _ =>
       }
+      me.consume()
     }
+
+    layer
   }
 
   private def makeCreatorPaneDraggable(pane: Pane): Group = {
