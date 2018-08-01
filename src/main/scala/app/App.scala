@@ -96,12 +96,12 @@ object App extends JFXApp {
   selectedLayerProp.onChange { (_, oldValue, newValue) =>
     if (oldValue != null) {
       val layer = oldValue.asInstanceOf[ImageLayer]
-      //layer.style = "-fx-border-width: 0;"
+      layer.style = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.0), 2, 1, 0, 0);"
       layer.color.unbind()
     }
     if (newValue != null) {
       val layer = newValue.asInstanceOf[ImageLayer]
-      //layer.style = "-fx-border-color: #7a7a7a; -fx-border-width: 1;"
+      layer.style = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 5, 0.5, 0, 0);"
       colorChooser.value = layer.color()
       layer.color <== colorChooser.value
     }
