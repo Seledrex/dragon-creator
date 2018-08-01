@@ -76,3 +76,7 @@
     -fx-pref-width: 16.01;
     -fx-pref-height: 16.01;
 }
+
+.color-control {
+    -fx-max-width: 18em;
+}
