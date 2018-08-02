@@ -4,15 +4,13 @@ package app
 // Imports
 //======================================================================================================================
 
-import javafx.beans.property.Property
-import javafx.beans.{InvalidationListener, Observable, binding => jfxb}
+import javafx.beans.{binding => jfxb}
 import javafx.scene.{control => jfxc, layout => jfxl, paint => jfxp}
 import scalafx.Includes._
 import scalafx.beans.binding.Bindings
 import scalafx.beans.property.{DoubleProperty, ObjectProperty}
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
-import scalafx.scene.control.TextFormatter.Change
 import scalafx.scene.control._
 import scalafx.scene.input.MouseEvent
 import scalafx.scene.layout._
@@ -43,20 +41,70 @@ class ColorChooser extends VBox {
   private val green = DoubleProperty(255)
   private val blue = DoubleProperty(255)
   private val alpha = DoubleProperty(DefaultColor.opacity * 100)
-  private val buttonProp = new ObjectProperty[Button]( Bean, PropName,null)
+  private val buttonProp = new ObjectProperty[Button](Bean, PropName,null)
   private val valueProperty = ObjectProperty(DefaultColor)
 
-  var counter: Int = 0
+  private var updateFlag = false
+
+  hue.onInvalidate {
+    if (!updateFlag) {
+      updateFlag = true
+      updateHSBColor()
+      updateFlag = false
+    }
+  }
+
+  sat.onInvalidate {
+    if (!updateFlag) {
+      updateFlag = true
+      updateHSBColor()
+      updateFlag = false
+    }
+  }
+
+  bright.onInvalidate {
+    if (!updateFlag) {
+      updateFlag = true
+      updateHSBColor()
+      updateFlag = false
+    }
+  }
+
+  red.onInvalidate {
+    if (!updateFlag) {
+      updateFlag = true
+      updateRGBColor()
+      updateFlag = false
+    }
+  }
+
+  green.onInvalidate {
+    if (!updateFlag) {
+      updateFlag = true
+      updateRGBColor()
+      updateFlag = false
+    }
+  }
+
+  blue.onInvalidate {
+    if (!updateFlag) {
+      updateFlag = true
+      updateRGBColor()
+      updateFlag = false
+    }
+  }
 
   valueProperty.onChange { (_, _, newColor) =>
-    println(counter)
-    counter += 1
-    hue.set(newColor.getHue)
-    sat.set(newColor.getSaturation * 100)
-    bright.set(newColor.getBrightness * 100)
-    red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
-    green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
-    blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+    if (!updateFlag) {
+      updateFlag = true
+      hue.set(newColor.getHue)
+      sat.set(newColor.getSaturation * 100)
+      bright.set(newColor.getBrightness * 100)
+      red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
+      green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
+      blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+      updateFlag = false
+    }
   }
 
   this.getStyleClass.add("my-custom-color")
@@ -216,13 +264,13 @@ class ColorChooser extends VBox {
     }
 
     // Create toggles
-    val rgbToggle = new ToggleButton("RGB") {
+    val rgbToggle: ToggleButton = new ToggleButton("RGB") {
       id = "RGB"
     }
-    val hsbToggle = new ToggleButton("HSB") {
+    val hsbToggle: ToggleButton = new ToggleButton("HSB") {
       id = "HSB"
     }
-    val webToggle = new ToggleButton("Web") {
+    val webToggle: ToggleButton = new ToggleButton("Web") {
       id = "WEB"
     }
 
@@ -251,53 +299,14 @@ class ColorChooser extends VBox {
 
     def set(i: Int, label: String, max: Int, property: DoubleProperty, group: String): Unit = {
       labels(i).setText(label)
-      sliders(i).setMax(max)
-      fields(i).setMax(max)
       if (boundProperties(i) != null) {
         sliders(i).value.unbindBidirectional(boundProperties(i))
         fields(i).value.unbindBidirectional(boundProperties(i))
       }
+      sliders(i).setMax(max)
       sliders(i).value <==> property
+      fields(i).setMax(max)
       fields(i).value <==> property
-      /*sliders(i).value.onChange {
-        if (group == "RGB") {
-          val newColor = Color.rgb(
-            Util.map(red.get, 0, 255, 0, 1).toInt,
-            Util.map(green.get, 0, 255, 0, 1).toInt,
-            Util.map(blue.get, 0, 255, 0, 1).toInt
-          )
-          hue.set(newColor.getHue)
-          sat.set(newColor.getSaturation * 100)
-          bright.set(newColor.getBrightness * 100)
-          value = newColor
-        } else {
-          val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
-          red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
-          green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
-          blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
-          value = newColor
-        }
-      }
-      fields(i).value.onChange {
-        if (group == "RGB") {
-          val newColor = Color.rgb(
-            Util.map(red.get, 0, 255, 0, 1).toInt,
-            Util.map(green.get, 0, 255, 0, 1).toInt,
-            Util.map(blue.get, 0, 255, 0, 1).toInt
-          )
-          hue.set(newColor.getHue)
-          sat.set(newColor.getSaturation * 100)
-          bright.set(newColor.getBrightness * 100)
-          value = newColor
-        } else {
-          val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
-          red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
-          green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
-          blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
-          value = newColor
-        }
-      }*/
-
       boundProperties(i) = property
     }
 
@@ -380,15 +389,19 @@ class ColorChooser extends VBox {
   }
 
   private def updateHSBColor(): Unit = {
-    value = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
+    val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
+    red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
+    green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
+    blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+    value = newColor
   }
 
   private def updateRGBColor(): Unit = {
-    value = Color.rgb(
-      Util.map(red.get, 0, 255, 0, 1).toInt,
-      Util.map(green.get, 0, 255, 0, 1).toInt,
-      Util.map(blue.get, 0, 255, 0, 1).toInt
-    )
+    val newColor = Color.rgb(red.get.toInt, green.get.toInt, blue.get.toInt)
+    hue.set(newColor.getHue)
+    sat.set(newColor.getSaturation * 100)
+    bright.set(newColor.getBrightness * 100)
+    value = newColor
   }
 
   private def clamp(value: Double): Double = {
