@@ -58,7 +58,7 @@ class ColorChooser extends VBox {
     green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
     blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
   }
-  
+
   this.getStyleClass.add("my-custom-color")
 
   //====================================================================================================================
@@ -236,20 +236,20 @@ class ColorChooser extends VBox {
         val newToggle = newValue.asInstanceOf[javafx.scene.control.ToggleButton]
         newToggle.id() match {
           case a if a == "RGB" =>
-            set(0, "Red:", 255, red)
-            set(1, "Green:", 255, green)
-            set(2, "Blue:", 255, blue)
+            set(0, "Red:", 255, red, "RGB")
+            set(1, "Green:", 255, green, "RGB")
+            set(2, "Blue:", 255, blue, "RGB")
           case b if b == "HSB" =>
-            set(0, "Hue:", 359, hue)
-            set(1, "Saturation:", 100, sat)
-            set(2, "Brightness:", 100, bright)
+            set(0, "Hue:", 360, hue, "HSB")
+            set(1, "Saturation:", 100, sat, "HSB")
+            set(2, "Brightness:", 100, bright, "HSB")
           case c if c == "WEB" =>
         }
       }
     }
     toggleGroup.selectToggle(rgbToggle)
 
-    def set(i: Int, label: String, max: Int, property: DoubleProperty): Unit = {
+    def set(i: Int, label: String, max: Int, property: DoubleProperty, group: String): Unit = {
       labels(i).setText(label)
       sliders(i).setMax(max)
       fields(i).setMax(max)
@@ -259,6 +259,45 @@ class ColorChooser extends VBox {
       }
       sliders(i).value <==> property
       fields(i).value <==> property
+      /*sliders(i).value.onChange {
+        if (group == "RGB") {
+          val newColor = Color.rgb(
+            Util.map(red.get, 0, 255, 0, 1).toInt,
+            Util.map(green.get, 0, 255, 0, 1).toInt,
+            Util.map(blue.get, 0, 255, 0, 1).toInt
+          )
+          hue.set(newColor.getHue)
+          sat.set(newColor.getSaturation * 100)
+          bright.set(newColor.getBrightness * 100)
+          value = newColor
+        } else {
+          val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
+          red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
+          green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
+          blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+          value = newColor
+        }
+      }
+      fields(i).value.onChange {
+        if (group == "RGB") {
+          val newColor = Color.rgb(
+            Util.map(red.get, 0, 255, 0, 1).toInt,
+            Util.map(green.get, 0, 255, 0, 1).toInt,
+            Util.map(blue.get, 0, 255, 0, 1).toInt
+          )
+          hue.set(newColor.getHue)
+          sat.set(newColor.getSaturation * 100)
+          bright.set(newColor.getBrightness * 100)
+          value = newColor
+        } else {
+          val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
+          red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
+          green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
+          blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+          value = newColor
+        }
+      }*/
+
       boundProperties(i) = property
     }
 
