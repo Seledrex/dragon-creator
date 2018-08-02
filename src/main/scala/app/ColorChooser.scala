@@ -47,75 +47,14 @@ class ColorChooser extends VBox {
 
   private var updateFlag = false
 
-  hue.onInvalidate {
-    if (!updateFlag) {
-      updateFlag = true
-      updateHSBColor()
-      updateFlag = false
-    }
-  }
-
-  sat.onInvalidate {
-    if (!updateFlag) {
-      updateFlag = true
-      updateHSBColor()
-      updateFlag = false
-    }
-  }
-
-  bright.onInvalidate {
-    if (!updateFlag) {
-      updateFlag = true
-      updateHSBColor()
-      updateFlag = false
-    }
-  }
-
-  red.onInvalidate {
-    if (!updateFlag) {
-      updateFlag = true
-      updateRGBColor()
-      updateFlag = false
-    }
-  }
-
-  green.onInvalidate {
-    if (!updateFlag) {
-      updateFlag = true
-      updateRGBColor()
-      updateFlag = false
-    }
-  }
-
-  blue.onInvalidate {
-    if (!updateFlag) {
-      updateFlag = true
-      updateRGBColor()
-      updateFlag = false
-    }
-  }
-
-  web.onInvalidate {
-    if (!updateFlag) {
-      updateFlag = true
-      updateWebColor()
-      updateFlag = false
-    }
-  }
-
-  valueProperty.onChange { (_, _, newColor) =>
-    if (!updateFlag) {
-      updateFlag = true
-      hue.set(newColor.getHue)
-      sat.set(newColor.getSaturation * 100)
-      bright.set(newColor.getBrightness * 100)
-      red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
-      green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
-      blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
-      web.set(Util.colorToRGBCode(Right(newColor)))
-      updateFlag = false
-    }
-  }
+  hue.onInvalidate(sync(updateHSBColor))
+  sat.onInvalidate(sync(updateHSBColor))
+  bright.onInvalidate(sync(updateHSBColor))
+  red.onInvalidate(sync(updateRGBColor))
+  green.onInvalidate(sync(updateRGBColor))
+  blue.onInvalidate(sync(updateRGBColor))
+  web.onInvalidate(sync(updateWebColor))
+  valueProperty.onChange(sync(updateAllColor))
 
   this.getStyleClass.add("my-custom-color")
 
@@ -431,6 +370,16 @@ class ColorChooser extends VBox {
     LinearGradient(0f, 0f, 1f, 0f, proportional = true, CycleMethod.NoCycle, stops.toList)
   }
 
+  private def updateAllColor(): Unit = {
+    hue.set(value().getHue)
+    sat.set(value().getSaturation * 100)
+    bright.set(value().getBrightness * 100)
+    red.set(Util.map(value().getRed, 0, 1, 0, 255))
+    green.set(Util.map(value().getGreen, 0, 1, 0, 255))
+    blue.set(Util.map(value().getBlue, 0, 1, 0, 255))
+    web.set(Util.colorToRGBCode(Right(value())))
+  }
+
   private def updateHSBColor(): Unit = {
     val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
     red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
@@ -459,6 +408,14 @@ class ColorChooser extends VBox {
       green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
       blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
       value = newColor
+    }
+  }
+
+  private def sync(func: () => Unit): Unit = {
+    if (!updateFlag) {
+      updateFlag = true
+      func()
+      updateFlag = false
     }
   }
 
