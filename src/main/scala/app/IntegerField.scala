@@ -10,9 +10,6 @@ class IntegerField(minValue: Int, maxValue: Int, initValue: Int) extends TextFie
     this(0, 100, 0)
   }
 
-  private final val Bean = this
-  private final val PropName = null
-
   private var min: Int = {
     if (minValue >= maxValue) throw new IllegalArgumentException
     minValue
@@ -23,12 +20,10 @@ class IntegerField(minValue: Int, maxValue: Int, initValue: Int) extends TextFie
     maxValue
   }
 
-  private val valueProperty = new IntegerProperty(Bean, PropName) {
-    value = {
-      if (initValue < min || initValue > max) throw new IllegalArgumentException
-      initValue
-    }
-  }
+  private val valueProperty = IntegerProperty({
+    if (initValue < min || initValue > max) throw new IllegalArgumentException
+    initValue
+  })
 
   text = s"$initValue"
 

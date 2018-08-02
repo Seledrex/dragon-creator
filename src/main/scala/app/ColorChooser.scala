@@ -8,7 +8,7 @@ import javafx.beans.{binding => jfxb}
 import javafx.scene.{control => jfxc, layout => jfxl, paint => jfxp}
 import scalafx.Includes._
 import scalafx.beans.binding.Bindings
-import scalafx.beans.property.{DoubleProperty, ObjectProperty}
+import scalafx.beans.property.{DoubleProperty, ObjectProperty, StringProperty}
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.control._
@@ -37,10 +37,11 @@ class ColorChooser extends VBox {
   private val hue = DoubleProperty(DefaultColor.hue * 100)
   private val sat = DoubleProperty(DefaultColor.saturation * 100)
   private val bright = DoubleProperty(DefaultColor.brightness * 100)
-  private val red = DoubleProperty(255)
-  private val green = DoubleProperty(255)
-  private val blue = DoubleProperty(255)
+  private val red = DoubleProperty(Util.map(DefaultColor.getRed, 0, 1, 0, 255))
+  private val green = DoubleProperty(Util.map(DefaultColor.getGreen, 0, 1, 0, 255))
+  private val blue = DoubleProperty(Util.map(DefaultColor.getBlue, 0, 1, 0, 255))
   private val alpha = DoubleProperty(DefaultColor.opacity * 100)
+  private val web = StringProperty(Util.colorToRGBCode(Right(DefaultColor)))
   private val buttonProp = new ObjectProperty[Button](Bean, PropName,null)
   private val valueProperty = ObjectProperty(DefaultColor)
 
@@ -94,6 +95,14 @@ class ColorChooser extends VBox {
     }
   }
 
+  web.onInvalidate {
+    if (!updateFlag) {
+      updateFlag = true
+      updateWebColor()
+      updateFlag = false
+    }
+  }
+
   valueProperty.onChange { (_, _, newColor) =>
     if (!updateFlag) {
       updateFlag = true
@@ -103,6 +112,7 @@ class ColorChooser extends VBox {
       red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
       green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
       blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+      web.set(Util.colorToRGBCode(Right(newColor)))
       updateFlag = false
     }
   }
@@ -263,6 +273,29 @@ class ColorChooser extends VBox {
       )
     }
 
+    val hexPane: HBox = new HBox() {
+      margin = Insets(5)
+      alignmentInParent = Pos.TopCenter
+      alignment = Pos.CenterRight
+      children = Seq(
+        new Region() {
+          hgrow = Priority.Always
+        },
+        new Label("Hex: ") {
+          alignment = Pos.CenterRight
+        },
+        new HexField(web) {
+          prefWidth = 60
+          alignment = Pos.Center
+          font = Font("Courier New")
+          alignmentInParent = Pos.Center
+        },
+        new Region() {
+          hgrow = Priority.Always
+        }
+      )
+    }
+
     // Create toggles
     val rgbToggle: ToggleButton = new ToggleButton("RGB") {
       id = "RGB"
@@ -270,13 +303,13 @@ class ColorChooser extends VBox {
     val hsbToggle: ToggleButton = new ToggleButton("HSB") {
       id = "HSB"
     }
-    val webToggle: ToggleButton = new ToggleButton("Web") {
-      id = "WEB"
+    val hexToggle: ToggleButton = new ToggleButton("Hex") {
+      id = "HEX"
     }
 
     // Create toggle group
     val toggleGroup = new ToggleGroup()
-    toggleGroup.toggles = Seq(rgbToggle, hsbToggle, webToggle)
+    toggleGroup.toggles = Seq(rgbToggle, hsbToggle, hexToggle)
     toggleGroup.selectedToggle.onChange { (_, oldValue, newValue) =>
       if (newValue == null) {
         toggleGroup.selectToggle(oldValue.asInstanceOf[javafx.scene.control.ToggleButton])
@@ -284,14 +317,20 @@ class ColorChooser extends VBox {
         val newToggle = newValue.asInstanceOf[javafx.scene.control.ToggleButton]
         newToggle.id() match {
           case a if a == "RGB" =>
+            settingsPane.visible = true
+            hexPane.visible = false
             set(0, "Red:", 255, red, "RGB")
             set(1, "Green:", 255, green, "RGB")
             set(2, "Blue:", 255, blue, "RGB")
           case b if b == "HSB" =>
+            settingsPane.visible = true
+            hexPane.visible = false
             set(0, "Hue:", 360, hue, "HSB")
             set(1, "Saturation:", 100, sat, "HSB")
             set(2, "Brightness:", 100, bright, "HSB")
-          case c if c == "WEB" =>
+          case c if c == "HEX" =>
+            settingsPane.visible = false
+            hexPane.visible = true
         }
       }
     }
@@ -313,9 +352,13 @@ class ColorChooser extends VBox {
     children = Seq(
       new HBox() {
         alignment = Pos.Center
-        children = Seq(rgbToggle, hsbToggle, webToggle)
+        children = Seq(rgbToggle, hsbToggle, hexToggle)
       },
-      settingsPane
+      new StackPane() {
+        children = Seq(
+          settingsPane, hexPane
+        )
+      }
     )
   }
 
@@ -393,6 +436,7 @@ class ColorChooser extends VBox {
     red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
     green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
     blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+    web.set(Util.colorToRGBCode(Right(newColor)))
     value = newColor
   }
 
@@ -401,7 +445,21 @@ class ColorChooser extends VBox {
     hue.set(newColor.getHue)
     sat.set(newColor.getSaturation * 100)
     bright.set(newColor.getBrightness * 100)
+    web.set(Util.colorToRGBCode(Right(newColor)))
     value = newColor
+  }
+
+  private def updateWebColor(): Unit = {
+    if (web().length == 6) {
+      val newColor = Color.web("#" + web())
+      hue.set(newColor.getHue)
+      sat.set(newColor.getSaturation * 100)
+      bright.set(newColor.getBrightness * 100)
+      red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
+      green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
+      blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
+      value = newColor
+    }
   }
 
   private def clamp(value: Double): Double = {
@@ -411,10 +469,10 @@ class ColorChooser extends VBox {
   }
 
   private def getBackgroundStyle(color: Color): String = { "" +
-    "-fx-background-color: " + Util.colorToRGBCode(Left(color)) + ";" +
+    "-fx-background-color: #" + Util.colorToRGBCode(Left(color)) + ";" +
     "-fx-background-insets: 0;" +
     "-fx-background-radius: 0;" +
-    "-fx-border-color: ladder(" + Util.colorToRGBCode(Left(color)) + ", #bdbdbd 49%, #bdbdbd 50%);" +
+    "-fx-border-color: ladder(#" + Util.colorToRGBCode(Left(color)) + ", #bdbdbd 49%, #bdbdbd 50%);" +
     "-fx-border-radius: 0;"
   }
 
