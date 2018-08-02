@@ -6,6 +6,7 @@ package app
 
 import java.io._
 
+import javafx.scene.input
 import javafx.{scene => jfxs}
 import javax.imageio.ImageIO
 import org.apache.commons.io.FilenameUtils
@@ -635,8 +636,7 @@ object App extends JFXApp {
       ctx = new DragContext()
     } yield ctx
 
-    val x: Group = layer
-    x.filterEvent(MouseEvent.Any) { me: MouseEvent =>
+    layer.addEventFilter(input.MouseEvent.ANY, (me: input.MouseEvent) => {
       me.eventType match {
         case MouseEvent.MousePressed =>
           if (!dragToolProp()) selectedLayerProp.value = layer
@@ -671,7 +671,7 @@ object App extends JFXApp {
         case _ =>
       }
       me.consume()
-    }
+    })
 
     layer
   }

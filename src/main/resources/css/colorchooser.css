@@ -15,11 +15,13 @@
     -fx-pref-height: 16.666667em;
     -fx-alignment: top-left;
     -fx-fill-height: true;
+    -fx-max-width: 18em;
 }
 
 .my-custom-color .color-rect-pane .color-rect {
     -fx-min-width: 16.666667em;
     -fx-min-height: 16.666667em;
+    -fx-max-width: 18em;
 }
 
 .my-custom-color .color-rect-pane .color-rect-border {
@@ -39,8 +41,9 @@
 
 .my-custom-color > .color-rect-pane > .color-bar {
     -fx-min-height: 1.666667em;
-    -fx-min-width: 16.666667em;
+    -fx-min-width: 18em;
     -fx-max-height: 1.666667em;
+    -fx-max-width: 18em;
     -fx-border-color: derive(#ececec, -20%);
 }
 
@@ -79,4 +82,7 @@
 
 .color-control {
     -fx-max-width: 18em;
+    -fx-border-color: #bdbdbd;
+    -fx-border-width: 1;
+    -fx-padding: 6;
 }

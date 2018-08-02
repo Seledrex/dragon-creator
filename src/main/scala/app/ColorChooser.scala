@@ -4,7 +4,8 @@ package app
 // Imports
 //======================================================================================================================
 
-import javafx.beans.{binding => jfxb}
+import javafx.beans.property.Property
+import javafx.beans.{InvalidationListener, Observable, binding => jfxb}
 import javafx.scene.{control => jfxc, layout => jfxl, paint => jfxp}
 import scalafx.Includes._
 import scalafx.beans.binding.Bindings
@@ -35,30 +36,29 @@ class ColorChooser extends VBox {
   private final val PaletteColumns = 12
   private final val PaletteRows = 2
 
-  private val hue = new DoubleProperty(Bean, PropName, DefaultColor.hue * 100)
-  private val sat = new DoubleProperty(Bean, PropName, DefaultColor.saturation * 100)
-  private val bright = new DoubleProperty(Bean, PropName, DefaultColor.brightness * 100)
-  private val red = new DoubleProperty(Bean, PropName, 255)
-  private val green = new DoubleProperty(Bean, PropName, 255)
-  private val blue = new DoubleProperty(Bean, PropName, 255)
-  private val alpha = new DoubleProperty(Bean, PropName, DefaultColor.opacity * 100)
+  private val hue = DoubleProperty(DefaultColor.hue * 100)
+  private val sat = DoubleProperty(DefaultColor.saturation * 100)
+  private val bright = DoubleProperty(DefaultColor.brightness * 100)
+  private val red = DoubleProperty(255)
+  private val green = DoubleProperty(255)
+  private val blue = DoubleProperty(255)
+  private val alpha = DoubleProperty(DefaultColor.opacity * 100)
+  private val buttonProp = new ObjectProperty[Button]( Bean, PropName,null)
+  private val valueProperty = ObjectProperty(DefaultColor)
 
-  private val buttonProp = new ObjectProperty[Button](Bean, PropName, null) {
-    onChange { (_, oldButton, _) =>
-      if (oldButton != null) {
-        oldButton.style = getBackgroundStyle(oldButton.userData.asInstanceOf[jfxp.Color])
-      }
-    }
+  var counter: Int = 0
+
+  valueProperty.onChange { (_, _, newColor) =>
+    println(counter)
+    counter += 1
+    hue.set(newColor.getHue)
+    sat.set(newColor.getSaturation * 100)
+    bright.set(newColor.getBrightness * 100)
+    red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
+    green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
+    blue.set(Util.map(newColor.getBlue, 0, 1, 0, 255))
   }
-
-  private val valueProperty = new ObjectProperty[jfxp.Color](Bean, PropName, DefaultColor) {
-    onChange { (_, _, newColor) =>
-      hue.set(newColor.getHue)
-      sat.set(newColor.getSaturation * 100)
-      bright.set(newColor.getBrightness * 100)
-    }
-  }
-
+  
   this.getStyleClass.add("my-custom-color")
 
   //====================================================================================================================
@@ -148,7 +148,7 @@ class ColorChooser extends VBox {
     background <== Bindings.createObjectBinding(
       () => {
         new jfxl.Background(new BackgroundFill(
-          valueProperty.value,
+          valueProperty(),
           CornerRadii.Empty,
           Insets.Empty))
       }, valueProperty
@@ -167,156 +167,6 @@ class ColorChooser extends VBox {
     Tooltip.install(this, new Tooltip("Click to save color"))
   }
 
-  private val colorCodeControl: HBox = new HBox(Properties.Padding) {
-    alignment = Pos.Center
-    children = Seq(
-      new VBox(Properties.Padding) {
-        children = Seq(
-          new HBox(Properties.Padding) {
-            children = Seq(
-              new Label("R:") {
-                prefWidth = 15
-                alignment = Pos.CenterRight
-              },
-              new TextField() {
-                prefWidth = 40
-                font = Font("Courier New")
-                alignmentInParent = Pos.Center
-                textFormatter = new TextFormatter[String]( {change: Change =>
-                  val maxLen: Int = 3
-                  if (change.controlNewText.length > maxLen) {
-                    change.text = ""
-                  }
-                  if (change.anchor > maxLen) change.anchor = maxLen
-                  if (change.caretPosition > maxLen) change.caretPosition = maxLen
-                  change
-                })
-              },
-              new Label("G:") {
-                prefWidth = 15
-                alignment = Pos.CenterRight
-              },
-              new TextField() {
-                prefWidth = 40
-                font = Font("Courier New")
-                alignmentInParent = Pos.Center
-                textFormatter = new TextFormatter[String]( {change: Change =>
-                  val maxLen: Int = 3
-                  if (change.controlNewText.length > maxLen) {
-                    change.text = ""
-                  }
-                  if (change.anchor > maxLen) change.anchor = maxLen
-                  if (change.caretPosition > maxLen) change.caretPosition = maxLen
-                  change
-                })
-              },
-              new Label("B:") {
-                prefWidth = 15
-                alignment = Pos.CenterRight
-              },
-              new TextField() {
-                prefWidth = 40
-                font = Font("Courier New")
-                alignmentInParent = Pos.Center
-                textFormatter = new TextFormatter[String]( {change: Change =>
-                  val maxLen: Int = 3
-                  if (change.controlNewText.length > maxLen) {
-                    change.text = ""
-                  }
-                  if (change.anchor > maxLen) change.anchor = maxLen
-                  if (change.caretPosition > maxLen) change.caretPosition = maxLen
-                  change
-                })
-              }
-            )
-          },
-          new HBox(Properties.Padding) {
-            children = Seq(
-              new Label("H:") {
-                prefWidth = 15
-                alignment = Pos.CenterRight
-              },
-              new TextField() {
-                prefWidth = 40
-                font = Font("Courier New")
-                alignmentInParent = Pos.Center
-                textFormatter = new TextFormatter[String]( {change: Change =>
-                  val maxLen: Int = 3
-                  if (change.controlNewText.length > maxLen) {
-                    change.text = ""
-                  }
-                  if (change.anchor > maxLen) change.anchor = maxLen
-                  if (change.caretPosition > maxLen) change.caretPosition = maxLen
-                  change
-                })
-              },
-              new Label("S:") {
-                prefWidth = 15
-                alignment = Pos.CenterRight
-              },
-              new TextField() {
-                prefWidth = 40
-                font = Font("Courier New")
-                alignmentInParent = Pos.Center
-                textFormatter = new TextFormatter[String]( {change: Change =>
-                  val maxLen: Int = 3
-                  if (change.controlNewText.length > maxLen) {
-                    change.text = ""
-                  }
-                  if (change.anchor > maxLen) change.anchor = maxLen
-                  if (change.caretPosition > maxLen) change.caretPosition = maxLen
-                  change
-                })
-              },
-              new Label("V:") {
-                prefWidth = 15
-                alignment = Pos.CenterRight
-              },
-              new TextField() {
-                prefWidth = 40
-                font = Font("Courier New")
-                alignmentInParent = Pos.Center
-                textFormatter = new TextFormatter[String]( {change: Change =>
-                  val maxLen: Int = 3
-                  if (change.controlNewText.length > maxLen) {
-                    change.text = ""
-                  }
-                  if (change.anchor > maxLen) change.anchor = maxLen
-                  if (change.caretPosition > maxLen) change.caretPosition = maxLen
-                  change
-                })
-              }
-            )
-          },
-          new HBox(Properties.Padding) {
-            children = Seq(
-              new Label("Hex:") {
-                alignment = Pos.CenterRight
-              },
-              new TextField() {
-                prefWidth = 60
-                font = Font("Courier New")
-                alignmentInParent = Pos.Center
-                textFormatter = new TextFormatter[String]( {change: Change =>
-                  val maxLen: Int = 6
-                  if (change.controlNewText.length > maxLen) {
-                    change.text = ""
-                  }
-                  if (change.anchor > maxLen) change.anchor = maxLen
-                  if (change.caretPosition > maxLen) change.caretPosition = maxLen
-                  change
-                })
-              },
-              new Button("Enter") {
-                alignmentInParent = Pos.Center
-              }
-            )
-          }
-        )
-      }
-    )
-  }
-
   private val colorControl: VBox = new VBox(Properties.Padding) {
 
     styleClass.add("color-control")
@@ -325,7 +175,8 @@ class ColorChooser extends VBox {
     // Controls
     val labels = new Array[Label](3)
     val sliders = new Array[Slider](3)
-    val fields = new Array[TextField](3)
+    val fields = new Array[IntegerField](3)
+    val boundProperties = new Array[DoubleProperty](3)
 
     val settingsPane = new VBox()
 
@@ -333,27 +184,20 @@ class ColorChooser extends VBox {
     for (i <- 0 until 3) {
       labels(i) = new Label("Brightness:") {
         prefWidth = 60
+        alignment = Pos.CenterRight
       }
       sliders(i) = new Slider() {
-        prefWidth = 100
+        prefWidth = 90
       }
-      fields(i) = new TextField() {
+      fields(i) = new IntegerField() {
         prefWidth = 40
+        alignment = Pos.Center
         font = Font("Courier New")
-        textFormatter = new TextFormatter[String]( {change: Change =>
-          val maxLen: Int = 3
-          if (change.controlNewText.length > maxLen || !change.controlNewText.matches("[0-9]+")) {
-            change.text = ""
-          }
-          if (change.anchor > maxLen) change.anchor = maxLen
-          if (change.caretPosition > maxLen) change.caretPosition = maxLen
-          change
-        })
       }
       settingsPane.children.add(
         {
           val box = new HBox() {
-            alignment = Pos.CenterLeft
+            alignment = Pos.CenterRight
             children = Seq(
               labels(i),
               new Region() {
@@ -385,25 +229,37 @@ class ColorChooser extends VBox {
     // Create toggle group
     val toggleGroup = new ToggleGroup()
     toggleGroup.toggles = Seq(rgbToggle, hsbToggle, webToggle)
-    toggleGroup.selectToggle(rgbToggle)
-    toggleGroup.selectedToggle.onChange {
-      val selected = toggleGroup.selectedToggle.get.asInstanceOf[javafx.scene.control.ToggleButton]
-      selected.id() match {
-        case a if a == "RGB" =>
-          set(0, "Red:", 255, red)
-          set(1, "Green:", 255, green)
-          set(2, "Blue:", 255, blue)
-        case b if b == "HSB" =>
-          set(0, "Hue:", 360, hue)
-          set(1, "Saturation:", 100, sat)
-          set(2, "Brightness:", 100, bright)
-        case c if c == "WEB" =>
+    toggleGroup.selectedToggle.onChange { (_, oldValue, newValue) =>
+      if (newValue == null) {
+        toggleGroup.selectToggle(oldValue.asInstanceOf[javafx.scene.control.ToggleButton])
+      } else {
+        val newToggle = newValue.asInstanceOf[javafx.scene.control.ToggleButton]
+        newToggle.id() match {
+          case a if a == "RGB" =>
+            set(0, "Red:", 255, red)
+            set(1, "Green:", 255, green)
+            set(2, "Blue:", 255, blue)
+          case b if b == "HSB" =>
+            set(0, "Hue:", 359, hue)
+            set(1, "Saturation:", 100, sat)
+            set(2, "Brightness:", 100, bright)
+          case c if c == "WEB" =>
+        }
       }
     }
+    toggleGroup.selectToggle(rgbToggle)
 
     def set(i: Int, label: String, max: Int, property: DoubleProperty): Unit = {
       labels(i).setText(label)
       sliders(i).setMax(max)
+      fields(i).setMax(max)
+      if (boundProperties(i) != null) {
+        sliders(i).value.unbindBidirectional(boundProperties(i))
+        fields(i).value.unbindBidirectional(boundProperties(i))
+      }
+      sliders(i).value <==> property
+      fields(i).value <==> property
+      boundProperties(i) = property
     }
 
     children = Seq(
@@ -485,8 +341,15 @@ class ColorChooser extends VBox {
   }
 
   private def updateHSBColor(): Unit = {
-    val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
-    value = newColor
+    value = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
+  }
+
+  private def updateRGBColor(): Unit = {
+    value = Color.rgb(
+      Util.map(red.get, 0, 255, 0, 1).toInt,
+      Util.map(green.get, 0, 255, 0, 1).toInt,
+      Util.map(blue.get, 0, 255, 0, 1).toInt
+    )
   }
 
   private def clamp(value: Double): Double = {
