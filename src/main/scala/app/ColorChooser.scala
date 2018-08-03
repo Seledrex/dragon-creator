@@ -47,14 +47,14 @@ class ColorChooser extends VBox {
 
   private var updateFlag = false
 
-  hue.onInvalidate(sync(updateHSBColor))
-  sat.onInvalidate(sync(updateHSBColor))
-  bright.onInvalidate(sync(updateHSBColor))
-  red.onInvalidate(sync(updateRGBColor))
-  green.onInvalidate(sync(updateRGBColor))
-  blue.onInvalidate(sync(updateRGBColor))
-  web.onInvalidate(sync(updateWebColor))
-  valueProperty.onChange(sync(updateAllColor))
+  hue.onInvalidate(sync(updateHSB))
+  sat.onInvalidate(sync(updateHSB))
+  bright.onInvalidate(sync(updateHSB))
+  red.onInvalidate(sync(updateRGB))
+  green.onInvalidate(sync(updateRGB))
+  blue.onInvalidate(sync(updateRGB))
+  web.onInvalidate(sync(updateWeb))
+  valueProperty.onChange(sync(updateAll))
 
   this.getStyleClass.add("my-custom-color")
 
@@ -191,25 +191,23 @@ class ColorChooser extends VBox {
         alignment = Pos.Center
         font = Font("Courier New")
       }
-      settingsPane.children.add(
-        {
-          val box = new HBox() {
-            alignment = Pos.CenterRight
-            children = Seq(
-              labels(i),
-              new Region() {
-                hgrow = Priority.Always
-              },
-              sliders(i),
-              new Region() {
-                hgrow = Priority.Always
-              },
-              fields(i)
-            )
-          }
-          box
+      settingsPane.children.add({
+        val box = new HBox() {
+          alignment = Pos.CenterRight
+          children = Seq(
+            labels(i),
+            new Region() {
+              hgrow = Priority.Always
+            },
+            sliders(i),
+            new Region() {
+              hgrow = Priority.Always
+            },
+            fields(i)
+          )
         }
-      )
+        box
+      })
     }
 
     val hexPane: HBox = new HBox() {
@@ -353,13 +351,13 @@ class ColorChooser extends VBox {
     val y = if (me.getY >= 200) 199.99 else me.getY
     sat.value = clamp(x / colorRect.getWidth) * 100
     bright.value = 100 - (clamp(y / colorRect.getHeight) * 100)
-    updateHSBColor()
+    updateHSB()
   }
 
   private def handleBarMouseEvent(me: MouseEvent): Unit = {
     val x = me.getX
     hue.set(clamp(x / colorRect.getWidth) * 360)
-    updateHSBColor()
+    updateHSB()
   }
 
   private def createHueGradient: LinearGradient = {
@@ -370,7 +368,7 @@ class ColorChooser extends VBox {
     LinearGradient(0f, 0f, 1f, 0f, proportional = true, CycleMethod.NoCycle, stops.toList)
   }
 
-  private def updateAllColor(): Unit = {
+  private def updateAll(): Unit = {
     hue.set(value().getHue)
     sat.set(value().getSaturation * 100)
     bright.set(value().getBrightness * 100)
@@ -380,7 +378,7 @@ class ColorChooser extends VBox {
     web.set(Util.colorToRGBCode(Right(value())))
   }
 
-  private def updateHSBColor(): Unit = {
+  private def updateHSB(): Unit = {
     val newColor = Color.hsb(hue.get, clamp(sat.get / 100), clamp(bright.get / 100), clamp(alpha.get / 100))
     red.set(Util.map(newColor.getRed, 0, 1, 0, 255))
     green.set(Util.map(newColor.getGreen, 0, 1, 0, 255))
@@ -389,7 +387,7 @@ class ColorChooser extends VBox {
     value = newColor
   }
 
-  private def updateRGBColor(): Unit = {
+  private def updateRGB(): Unit = {
     val newColor = Color.rgb(red.get.toInt, green.get.toInt, blue.get.toInt)
     hue.set(newColor.getHue)
     sat.set(newColor.getSaturation * 100)
@@ -398,7 +396,7 @@ class ColorChooser extends VBox {
     value = newColor
   }
 
-  private def updateWebColor(): Unit = {
+  private def updateWeb(): Unit = {
     if (web().length == 6) {
       val newColor = Color.web("#" + web())
       hue.set(newColor.getHue)
